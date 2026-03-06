@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html class="dark" lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Runvato | Running para principiantes</title>
+
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+<script>
+tailwind.config = {
+darkMode: "class",
+theme: {
+extend: {
+colors: {
+primary: "#D1FF00",
+"background-light": "#f8f8f5",
+"background-dark": "#000000",
+},
+fontFamily: {
+display: ["Lexend","sans-serif"]
+},
+borderRadius: {
+DEFAULT:"1rem",
+lg:"2rem",
+xl:"3rem",
+full:"9999px"
+}
+}
+}
+}
+</script>
+
+<style type="text/tailwindcss">
+@layer base{
+html,body{
+height:100%;
+}
+}
+
+.runvato-font{
+font-family:'Lexend',sans-serif;
+font-weight:800;
+letter-spacing:-0.05em;
+font-style:italic;
+}
+</style>
+
+</head>
+
+<body class="bg-background-dark font-display text-slate-100 antialiased">
+
+<div class="relative flex h-[100dvh] w-full flex-col overflow-hidden">
+
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20 z-10"></div>
+
+<div class="w-full h-full bg-cover bg-center"
+style="background-image:url('bgimage.webp');">
+</div>
+</div>
+
+<div class="relative z-20 flex flex-col h-full">
+
+<header class="flex items-center justify-between px-6 pt-8 pb-2 shrink-0">
+
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings:'FILL'1,'wght'700">
+bolt
+</span>
+
+<span class="runvato-font text-white text-xl uppercase">
+Runvato
+</span>
+</div>
+
+<!--
+BOTÓN INFO TOP RIGHT
+<button class="bg-white/10 backdrop-blur-md rounded-full p-2 text-white">
+<span class="material-symbols-outlined">
+help_outline
+</span>
+</button>-->
+
+</header>
+
+<div class="flex-1 flex flex-col items-center justify-center px-8 text-center">
+
+<div class="mb-6 inline-flex items-center justify-center p-5 bg-primary/20 rounded-full border border-primary/30 backdrop-blur-sm">
+<span class="material-symbols-outlined text-primary text-6xl">
+directions_run
+</span>
+</div>
+
+<h1 class="runvato-font text-white text-5xl md:text-7xl uppercase leading-[0.85] mb-4">
+<span class="block">
+RUNVATO
+</span>
+</h1>
+
+<p class="text-white text-base md:text-lg font-medium leading-tight max-w-[280px] drop-shadow-md">
+Entrena a tu ritmo combinando intervalos de caminar y correr.
+</p>
+
+</div>
+
+<div class="px-8 pb-10 pt-4 shrink-0">
+
+<a href="app.html">
+<button class="flex items-center justify-center w-full h-14 bg-primary text-black rounded-full text-lg runvato-font uppercase tracking-wide transition-transform active:scale-95 shadow-2xl shadow-primary/30">
+
+<span>
+Empezar
+</span>
+
+<span class="material-symbols-outlined ml-2 font-bold">
+arrow_forward
+</span>
+
+</button>
+</a>
+
+</div>
+
+</div>
+
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/30 rounded-full z-30"></div>
+
+</div>
+
+</body>
+</html>

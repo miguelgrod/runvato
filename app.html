@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+<title>Runvato</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+body{
+background:#000;
+margin:0;
+overflow:hidden;
+position:relative;
+font-family:system-ui;
+}
+
+body::before{
+content:"";
+position:fixed;
+inset:0;
+background-image:url("bgimage.webp");
+background-size:cover;
+background-position:center;
+background-repeat:no-repeat;
+opacity:0.1;
+z-index:-1;
+}
+
+/* ---------- SLIDER STYLE ---------- */
+
+.slider{
+-webkit-appearance:none;
+appearance:none;
+width:100%;
+height:6px;
+background:#2b2b2b;
+border-radius:10px;
+outline:none;
+}
+
+.slider::-webkit-slider-thumb{
+-webkit-appearance:none;
+width:34px;
+height:34px;
+background:#111;
+border:3px solid #d7ff00;
+border-radius:50%;
+box-shadow:0 0 15px rgba(215,255,0,0.6);
+cursor:pointer;
+}
+
+.slider::-moz-range-thumb{
+width:34px;
+height:34px;
+background:#111;
+border:3px solid #d7ff00;
+border-radius:50%;
+}
+
+/* ---------- PROGRESS ---------- */
+
+#progressRing{
+transition: stroke-dashoffset 1s linear;
+}
+
+#progressTotal{
+transition: width 1s linear;
+}
+
+/* ---------- MOBILE HEIGHT FIT ---------- */
+
+.appContainer{
+height:100dvh;
+display:flex;
+flex-direction:column;
+justify-content:space-between;
+}
+
+.sliderBlock{
+margin-bottom:1.2rem;
+}
+
+.sliderLabel{
+display:flex;
+justify-content:space-between;
+font-size:0.9rem;
+margin-bottom:0.3rem;
+color:#ddd;
+}
+
+.sliderValue{
+color:#d7ff00;
+font-weight:600;
+}
+
+</style>
+
+</head>
+
+<body class="text-white">
+
+<div class="appContainer w-full px-6 py-5">
+
+<!-- HEADER -->
+
+<div class="flex justify-between items-center">
+
+<h1 class="text-3xl font-bold">RUNVATO</h1>
+
+<div id="musicToggle" class="cursor-pointer">
+
+<svg id="iconSoundOn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+<path d="M3 9v6h4l5 4V5L7 9H3z"/>
+</svg>
+
+<svg id="iconSoundOff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24" class="hidden">
+<path d="M3 9v6h4l5 4V5L7 9H3z"/>
+<line x1="16" y1="8" x2="22" y2="16" stroke="white" stroke-width="2"/>
+<line x1="22" y1="8" x2="16" y2="16" stroke="white" stroke-width="2"/>
+</svg>
+
+</div>
+
+</div>
+
+<!-- SLIDERS -->
+
+<div>
+
+<div class="sliderBlock">
+
+<div class="sliderLabel">
+<span>Caminar</span>
+<span class="sliderValue"><span id="walkValue">1</span> min</span>
+</div>
+
+<input id="walkSlider" type="range" min="1" max="10" value="1" class="slider">
+
+</div>
+
+
+<div class="sliderBlock">
+
+<div class="sliderLabel">
+<span>Correr</span>
+<span class="sliderValue"><span id="runValue">3</span> min</span>
+</div>
+
+<input id="runSlider" type="range" min="1" max="10" value="3" class="slider">
+
+</div>
+
+
+<div class="sliderBlock">
+
+<div class="sliderLabel">
+<span>Ciclos</span>
+<span class="sliderValue" id="cycleValue">5</span>
+</div>
+
+<input id="cycleSlider" type="range" min="1" max="20" value="5" class="slider">
+
+</div>
+
+</div>
+
+<!-- TIMER AREA -->
+
+<div class="flex flex-col items-center justify-center flex-1">
+
+<div class="relative w-56 h-56 mb-4">
+
+<svg class="w-full h-full -rotate-90">
+
+<circle cx="112" cy="112" r="100" stroke="#1f2937" stroke-width="12" fill="transparent"/>
+
+<circle id="progressRing"
+cx="112"
+cy="112"
+r="100"
+stroke="#d7ff00"
+stroke-width="12"
+fill="transparent"
+stroke-linecap="round"
+stroke-dasharray="628"
+stroke-dashoffset="628"
+/>
+
+</svg>
+
+<div class="absolute inset-0 flex items-center justify-center">
+
+<div class="text-5xl font-bold" id="timer">
+00:00
+</div>
+
+</div>
+
+</div>
+
+<div class="w-full bg-gray-700 h-2 rounded">
+<div id="progressTotal" class="bg-[#d7ff00] h-2 rounded" style="width:0%"></div>
+</div>
+
+<div id="cycleLabel" class="mt-3 text-gray-400">
+LISTO
+</div>
+
+</div>
+
+<!-- BUTTONS -->
+
+<div class="flex gap-4 pb-safe">
+
+<button id="playBtn"
+class="flex-1 bg-[#d7ff00] text-black py-4 rounded-full font-bold">
+EMPEZAR
+</button>
+
+<button id="pauseBtn"
+disabled
+class="flex-1 border border-gray-400 text-gray-400 py-4 rounded-full cursor-not-allowed">
+PAUSA
+</button>
+
+</div>
+
+</div>
+
+<!-- AUDIOS -->
+
+<audio id="startSound" src="start.mp3"></audio>
+<audio id="playSound" src="play.mp3"></audio>
+<audio id="warn10" src="warn10.mp3"></audio>
+<audio id="warn3" src="warn3.mp3"></audio>
+<audio id="halfRun" src="halfRun.mp3"></audio>
+<audio id="finishRun" src="finishRun.mp3"></audio>
+<audio id="completeSound" src="trainingComplete.mp3"></audio>
+<audio id="music" src="music.mp3" loop></audio>
+
+<script>
+
+/* TODO TU JS ORIGINAL — NO MODIFICADO */
+
+const walkSlider=document.getElementById("walkSlider")
+const runSlider=document.getElementById("runSlider")
+const cycleSlider=document.getElementById("cycleSlider")
+
+const walkValue=document.getElementById("walkValue")
+const runValue=document.getElementById("runValue")
+const cycleValue=document.getElementById("cycleValue")
+
+const timerLabel=document.getElementById("timer")
+const progressTotal=document.getElementById("progressTotal")
+const progressRing=document.getElementById("progressRing")
+const cycleLabel=document.getElementById("cycleLabel")
+
+const playBtn=document.getElementById("playBtn")
+const pauseBtn=document.getElementById("pauseBtn")
+
+const startSound=document.getElementById("startSound")
+const playSound=document.getElementById("playSound")
+const warn10=document.getElementById("warn10")
+const warn3=document.getElementById("warn3")
+const halfRun=document.getElementById("halfRun")
+const finishRun=document.getElementById("finishRun")
+const completeSound=document.getElementById("completeSound")
+const music=document.getElementById("music")
+
+function stopAllAudio(){
+document.querySelectorAll("audio").forEach(a=>{
+a.pause()
+a.currentTime=0
+})
+}
+
+function playAlert(sound){
+const s = sound.cloneNode(true)
+s.currentTime = 0
+s.volume = sound.volume
+s.play().catch(()=>{})
+}
+
+walkSlider.oninput=()=>walkValue.textContent=walkSlider.value
+runSlider.oninput=()=>runValue.textContent=runSlider.value
+cycleSlider.oninput=()=>cycleValue.textContent=cycleSlider.value
+
+let timer=null
+let remaining=0
+let phase="walk"
+let cycle=1
+
+let walkTime=0
+let runTime=0
+let cycles=0
+
+let totalTime=0
+let elapsed=0
+
+const circumference=628
+
+function formatTime(s){
+let m=Math.floor(s/60)
+let sec=s%60
+return String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0")
+}
+
+function updateRing(){
+let totalInterval=phase==="walk"?walkTime:runTime
+let percent=(totalInterval-remaining)/totalInterval
+let offset=circumference-(percent*circumference)
+progressRing.style.strokeDashoffset=offset
+}
+
+function startTraining(){
+
+if(timer)return
+
+walkTime=parseInt(walkSlider.value)*60
+runTime=parseInt(runSlider.value)*60
+cycles=parseInt(cycleSlider.value)
+
+totalTime=(walkTime+runTime)*cycles
+
+remaining=walkTime
+phase="walk"
+cycle=1
+elapsed=0
+
+playAlert(startSound)
+setTimeout(()=>playAlert(playSound),200)
+
+music.volume=0.5
+music.currentTime=0
+music.play().catch(()=>{})
+
+timer=setInterval(tick,1000)
+
+pauseBtn.disabled=false
+pauseBtn.classList.remove("border-gray-400","text-gray-400","cursor-not-allowed")
+pauseBtn.classList.add("border-white","text-white")
+
+}
+
+function tick(){
+
+remaining--
+elapsed++
+
+timerLabel.textContent=formatTime(remaining)
+
+updateRing()
+
+let percent=(elapsed/totalTime)*100
+progressTotal.style.width=percent+"%"
+
+if(phase==="walk"){
+if(remaining===10)playAlert(warn10)
+if(remaining===3)playAlert(warn3)
+}
+
+if(phase==="run"){
+if(remaining===Math.floor(runTime/2))
+playAlert(halfRun)
+}
+
+if(remaining<=0){
+
+if(phase==="walk"){
+phase="run"
+remaining=runTime
+}else{
+
+if(cycle>=cycles){
+playAlert(completeSound)
+resetTraining()
+return
+}
+
+playAlert(finishRun)
+
+cycle++
+phase="walk"
+remaining=walkTime
+
+}
+
+}
+
+cycleLabel.textContent="Ciclo "+cycle+" / "+cycles
+
+}
+
+playBtn.onclick=()=>{
+
+if(playBtn.textContent==="DETENER"){
+resetTraining()
+return
+}
+
+playBtn.textContent="DETENER"
+playBtn.classList.remove("bg-[#d7ff00]")
+playBtn.classList.add("bg-red-500")
+
+startTraining()
+
+}
+
+pauseBtn.onclick=()=>{
+
+if(timer){
+
+clearInterval(timer)
+timer=null
+pauseBtn.textContent="REANUDAR"
+music.pause()
+
+}else{
+
+timer=setInterval(tick,1000)
+pauseBtn.textContent="PAUSA"
+music.play().catch(()=>{})
+
+}
+
+}
+
+function resetTraining(){
+
+clearInterval(timer)
+timer=null
+
+timerLabel.textContent="00:00"
+progressTotal.style.width="0%"
+progressRing.style.strokeDashoffset=circumference
+cycleLabel.textContent="LISTO"
+
+playBtn.textContent="EMPEZAR"
+playBtn.classList.remove("bg-red-500")
+playBtn.classList.add("bg-[#d7ff00]")
+
+pauseBtn.disabled=true
+pauseBtn.textContent="PAUSA"
+pauseBtn.classList.remove("border-white","text-white")
+pauseBtn.classList.add("border-gray-400","text-gray-400","cursor-not-allowed")
+
+stopAllAudio()
+
+}
+
+const iconSoundOn=document.getElementById("iconSoundOn")
+const iconSoundOff=document.getElementById("iconSoundOff")
+
+musicToggle.onclick=()=>{
+
+music.muted=!music.muted
+
+iconSoundOn.classList.toggle("hidden",music.muted)
+iconSoundOff.classList.toggle("hidden",!music.muted)
+
+}
+
+</script>
+
+</body>
+</html>
