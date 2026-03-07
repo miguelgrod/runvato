@@ -6,19 +6,19 @@ on:
       - main
 
 jobs:
-  ftp-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Deploy files via SFTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      - name: Upload via SFTP
+        uses: appleboy/scp-action@v0.1.7
         with:
-          server: ftp.cluster121.hosting.ovh.net
+          host: ftp.cluster121.hosting.ovh.net
           username: runvatv
           password: ${{ secrets.FTP_PASSWORD }}
-          protocol: sftp
           port: 22
-          server-dir: /www/
+          source: "."
+          target: "/www"
