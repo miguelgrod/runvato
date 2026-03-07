@@ -23,7 +23,7 @@ body::before{
 content:"";
 position:fixed;
 inset:0;
-background-image:url("bgimage.webp");
+background-image:url("img/bgimage.webp");
 background-size:cover;
 background-position:center;
 background-repeat:no-repeat;
@@ -98,6 +98,40 @@ color:#d7ff00;
 font-weight:600;
 }
 
+/* ---------- RUNNING MODE ---------- */
+
+#slidersSection{
+transition:opacity 0.5s ease, max-height 0.5s ease, margin 0.5s ease;
+max-height:400px;
+overflow:hidden;
+}
+
+body.running #slidersSection{
+opacity:0;
+max-height:0;
+margin:0;
+pointer-events:none;
+}
+
+#timerWrapper{
+transition:width 0.5s ease, height 0.5s ease;
+}
+
+body.running #timerWrapper{
+width:80vw;
+height:80vw;
+max-width:400px;
+max-height:400px;
+}
+
+#timer{
+transition:font-size 0.5s ease;
+}
+
+body.running #timer{
+font-size:clamp(2.5rem, 10vw, 4rem);
+}
+
 </style>
 
 </head>
@@ -130,7 +164,7 @@ font-weight:600;
 
 <!-- SLIDERS -->
 
-<div>
+<div id="slidersSection">
 
 <div class="sliderBlock">
 
@@ -173,9 +207,9 @@ font-weight:600;
 
 <div class="flex flex-col items-center justify-center flex-1">
 
-<div class="relative w-56 h-56 mb-4">
+<div id="timerWrapper" class="relative w-56 h-56 mb-4">
 
-<svg class="w-full h-full -rotate-90">
+<svg class="w-full h-full -rotate-90" viewBox="0 0 224 224">
 
 <circle cx="112" cy="112" r="100" stroke="#1f2937" stroke-width="12" fill="transparent"/>
 
@@ -234,14 +268,14 @@ PAUSA
 
 <!-- AUDIOS -->
 
-<audio id="startSound" src="start.mp3"></audio>
-<audio id="playSound" src="play.mp3"></audio>
-<audio id="warn10" src="warn10.mp3"></audio>
-<audio id="warn3" src="warn3.mp3"></audio>
-<audio id="halfRun" src="halfRun.mp3"></audio>
-<audio id="finishRun" src="finishRun.mp3"></audio>
-<audio id="completeSound" src="trainingComplete.mp3"></audio>
-<audio id="music" src="music.mp3" loop></audio>
+<audio id="startSound" src="audio/start.mp3"></audio>
+<audio id="playSound" src="audio/play.mp3"></audio>
+<audio id="warn10" src="audio/warn10.mp3"></audio>
+<audio id="warn3" src="audio/warn3.mp3"></audio>
+<audio id="halfRun" src="audio/halfRun.mp3"></audio>
+<audio id="finishRun" src="audio/finishRun.mp3"></audio>
+<audio id="completeSound" src="audio/trainingComplete.mp3"></audio>
+<audio id="music" src="audio/music.mp3" loop></audio>
 
 <script>
 
@@ -272,17 +306,29 @@ const finishRun=document.getElementById("finishRun")
 const completeSound=document.getElementById("completeSound")
 const music=document.getElementById("music")
 
+const activeClones=[]
+
 function stopAllAudio(){
 document.querySelectorAll("audio").forEach(a=>{
 a.pause()
 a.currentTime=0
 })
+activeClones.forEach(a=>{
+a.pause()
+a.currentTime=0
+})
+activeClones.length=0
 }
 
 function playAlert(sound){
 const s = sound.cloneNode(true)
 s.currentTime = 0
 s.volume = sound.volume
+activeClones.push(s)
+s.onended=()=>{
+const i=activeClones.indexOf(s)
+if(i!==-1)activeClones.splice(i,1)
+}
 s.play().catch(()=>{})
 }
 
@@ -334,6 +380,8 @@ elapsed=0
 
 playAlert(startSound)
 setTimeout(()=>playAlert(playSound),200)
+
+document.body.classList.add("running")
 
 music.volume=0.5
 music.currentTime=0
@@ -448,6 +496,8 @@ pauseBtn.disabled=true
 pauseBtn.textContent="PAUSA"
 pauseBtn.classList.remove("border-white","text-white")
 pauseBtn.classList.add("border-gray-400","text-gray-400","cursor-not-allowed")
+
+document.body.classList.remove("running")
 
 stopAllAudio()
 
