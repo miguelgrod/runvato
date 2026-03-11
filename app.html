@@ -423,7 +423,7 @@
 
                     if (cycle >= cycles) {
                         playAlert(completeSound)
-                        resetTraining()
+                        resetTraining(true)
                         return
                     }
 
@@ -475,7 +475,7 @@
 
         }
 
-        function resetTraining() {
+        function resetTraining(keepAudio = false) {
 
             clearInterval(timer)
             timer = null
@@ -497,7 +497,12 @@
 
             document.body.classList.remove("running")
 
-            stopAllAudio()
+            if (keepAudio) {
+                music.pause()
+                music.currentTime = 0
+            } else {
+                stopAllAudio()
+            }
 
         }
 
