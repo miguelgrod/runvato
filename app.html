@@ -342,6 +342,26 @@
 
     </div>
 
+    <!-- SAVE WORKOUT OVERLAY -->
+
+    <div id="saveOverlay" class="fixed inset-0 z-40 hidden items-center justify-center" style="background:rgba(0,0,0,0.65); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);">
+
+        <div class="w-full max-w-xs mx-4 px-6 py-7 text-center" style="background:#111; border-radius:1.25rem; border:1px solid #333;">
+
+            <p class="text-lg font-bold mb-1">¡Completado!</p>
+            <p id="saveWorkoutSummary" class="text-sm text-gray-400 mb-6"></p>
+
+            <div class="flex gap-3">
+                <button id="saveNo"  class="flex-1 border border-gray-600 text-gray-300 py-3 rounded-full font-bold text-sm">Descartar</button>
+                <button id="saveYes" class="flex-1 bg-[#d7ff00] text-black py-3 rounded-full font-bold text-sm">Guardar</button>
+            </div>
+
+            <p id="saveMsg" class="mt-3 text-sm hidden"></p>
+
+        </div>
+
+    </div>
+
     <!-- AUDIOS -->
 
     <audio id="playSound" src="audio/play.mp3"></audio>
@@ -701,7 +721,11 @@
                     if (cycle >= cycles) {
                         completeSound.currentTime = 0
                         completeSound.play().catch(() => {})
+                        const doneWalk   = walkTime / 60
+                        const doneRun    = runTime / 60
+                        const doneCycles = cycles
                         resetTraining(true)
+                        showSaveDialog(doneWalk, doneRun, doneCycles)
                         return
                     }
 
@@ -791,6 +815,66 @@
             music.muted = !music.muted
             iconSoundOn.classList.toggle("hidden", music.muted)
             iconSoundOff.classList.toggle("hidden", !music.muted)
+        }
+
+        // ─── SAVE WORKOUT DIALOG ──────────────────────────────────────────────────
+
+        const saveOverlay = document.getElementById("saveOverlay")
+        const saveMsg     = document.getElementById("saveMsg")
+
+        function showSaveDialog(walkMin, runMin, numCycles) {
+            const total = Math.round((walkMin + runMin) * numCycles)
+            document.getElementById("saveWorkoutSummary").textContent =
+                `${walkMin}' caminar · ${runMin}' correr · ${numCycles} series · ${total} min`
+            saveOverlay.dataset.walk   = walkMin
+            saveOverlay.dataset.run    = runMin
+            saveOverlay.dataset.cycles = numCycles
+            saveMsg.classList.add("hidden")
+            const saveYes = document.getElementById("saveYes")
+            saveYes.disabled = false
+            saveYes.textContent = "Guardar"
+            saveYes.classList.remove("hidden")
+            document.getElementById("saveNo").textContent = "Descartar"
+            saveOverlay.classList.remove("hidden")
+            saveOverlay.classList.add("flex")
+        }
+
+        function hideSaveDialog() {
+            saveOverlay.classList.add("hidden")
+            saveOverlay.classList.remove("flex")
+        }
+
+        document.getElementById("saveNo").onclick = () => hideSaveDialog()
+
+        document.getElementById("saveYes").onclick = async () => {
+            const btn = document.getElementById("saveYes")
+            btn.disabled = true
+            btn.textContent = "Guardando..."
+
+            const { data: { user } } = await sb.auth.getUser()
+            if (!user) { hideSaveDialog(); return }
+
+            const { error } = await sb.from("workouts").insert({
+                user_id:      user.id,
+                walk_minutes: parseFloat(saveOverlay.dataset.walk),
+                run_minutes:  parseFloat(saveOverlay.dataset.run),
+                cycles:       parseInt(saveOverlay.dataset.cycles)
+            })
+
+            if (error) {
+                saveMsg.textContent = "Error al guardar. Inténtalo de nuevo."
+                saveMsg.style.cssText = "color:#f87171;"
+                saveMsg.classList.remove("hidden")
+                btn.disabled = false
+                btn.textContent = "Guardar"
+            } else {
+                saveMsg.innerHTML = '¡Guardado! <a href="area-usuario.html" style="color:#d7ff00;text-decoration:underline;">Ver historial →</a>'
+                saveMsg.style.cssText = "color:#4ade80;"
+                saveMsg.classList.remove("hidden")
+                btn.classList.add("hidden")
+                document.getElementById("saveNo").textContent = "Cerrar"
+                setTimeout(() => hideSaveDialog(), 4000)
+            }
         }
 
     </script>
