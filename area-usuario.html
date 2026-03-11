@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+
+    <title>Runvato — Mis entrenamientos</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
+    <style>
+
+        body {
+            background: #000;
+            margin: 0;
+            font-family: system-ui;
+            min-height: 100dvh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            background-image: url("img/bgimage.webp");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0.1;
+            z-index: -1;
+        }
+
+        .appContainer {
+            max-width: 430px;
+            margin: 0 auto;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── WORKOUT CARD ── */
+
+        .workout-card {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 1rem;
+            padding: 1.1rem 1.2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .workout-card:hover {
+            border-color: #333;
+        }
+
+        .workout-card.deleting {
+            opacity: 0;
+            transform: translateX(30px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* ── STAT PILL ── */
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.1rem;
+        }
+
+        .stat-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #d7ff00;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── DELETE BTN ── */
+
+        .delete-btn {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid #333;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s, background 0.2s;
+        }
+
+        .delete-btn:hover {
+            border-color: #f87171;
+            color: #f87171;
+            background: #2d1515;
+        }
+
+        /* ── SKELETON ── */
+
+        .skeleton {
+            background: #1a1a1a;
+            border-radius: 1rem;
+            height: 84px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.4; }
+        }
+
+        /* ── AUTH INPUT ── */
+
+        .auth-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #1f1f1f;
+            border: 1px solid #333;
+            border-radius: 0.75rem;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .auth-input:focus  { border-color: #d7ff00; }
+        .auth-input::placeholder { color: #555; }
+        .auth-input.input-ok    { border-color: #4ade80; }
+        .auth-input.input-error { border-color: #f87171; }
+
+        /* ── CONFIRM OVERLAY ── */
+
+        #confirmOverlay {
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+
+    </style>
+
+</head>
+
+<body class="text-white">
+
+    <!-- AUTH MODAL -->
+
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+
+        <div class="w-full max-w-sm px-6 py-8 mx-4" style="background:#111; border-radius:1.25rem;">
+
+            <h2 class="text-2xl font-bold mb-1 text-center">RUNVATO</h2>
+            <p class="text-center text-gray-400 text-sm mb-6">Inicia sesión para continuar</p>
+
+            <div id="authMessage" class="hidden mb-4 text-sm text-center px-2 py-2 rounded-lg"></div>
+
+            <input id="authEmail" type="email" placeholder="Email" class="auth-input mb-3">
+            <input id="authPassword" type="password" placeholder="Contraseña" class="auth-input mb-5">
+
+            <button id="authBtn" class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold mb-4">
+                ENTRAR
+            </button>
+
+            <p class="text-center text-sm text-gray-400">
+                <span id="authToggleText">¿No tienes cuenta?</span>
+                <button id="authToggle" class="text-[#d7ff00] ml-1 font-semibold">Regístrate</button>
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- CONFIRM DELETE DIALOG -->
+
+    <div id="confirmOverlay" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60">
+
+        <div class="w-full max-w-xs mx-4 px-6 py-7 text-center" style="background:#111; border-radius:1.25rem; border:1px solid #333;">
+
+            <p class="text-base font-semibold mb-1">¿Eliminar entrenamiento?</p>
+            <p class="text-sm text-gray-400 mb-6">Esta acción no se puede deshacer.</p>
+
+            <div class="flex gap-3">
+                <button id="confirmNo"  class="flex-1 border border-gray-600 text-gray-300 py-3 rounded-full font-bold text-sm">Cancelar</button>
+                <button id="confirmYes" class="flex-1 bg-red-500 text-white py-3 rounded-full font-bold text-sm">Eliminar</button>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- APP -->
+
+    <div class="appContainer w-full px-6 py-5">
+
+        <!-- HEADER -->
+
+        <div class="flex justify-between items-center mb-6">
+
+            <a href="app.html" class="opacity-50 hover:opacity-100 transition-opacity" title="Volver">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="white" viewBox="0 0 24 24">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+            </a>
+
+            <h1 class="text-xl font-bold tracking-wide">MIS ENTRENAMIENTOS</h1>
+
+            <button id="logoutBtn" title="Cerrar sesión" class="opacity-50 hover:opacity-100 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+                    <path d="M16 13v-2H7V8l-5 4 5 4v-3z"/>
+                    <path d="M20 3h-9a2 2 0 0 0-2 2v4h2V5h9v14h-9v-4H9v4a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+                </svg>
+            </button>
+
+        </div>
+
+        <!-- USER EMAIL LABEL -->
+
+        <p id="userEmail" class="text-xs text-gray-500 mb-5 text-center"></p>
+
+        <!-- WORKOUT LIST -->
+
+        <div id="workoutList" class="flex flex-col gap-3 flex-1">
+
+            <!-- Skeletons shown while loading -->
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+
+        </div>
+
+        <!-- BOTTOM SPACER -->
+        <div class="h-8"></div>
+
+    </div>
+
+    <script>
+
+        // ─── SUPABASE ────────────────────────────────────────────────────────────
+
+        const SUPABASE_URL  = "https://criayuvoihnadarffnvk.supabase.co"
+        const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyaWF5dXZvaWhuYWRhcmZmbnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjAzOTIsImV4cCI6MjA4ODgzNjM5Mn0.5Qm4OEUftGMhrbhvB3rTF6Vsx86RPvp17mG75_ngpMQ"
+
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+        // ─── AUTH UI ─────────────────────────────────────────────────────────────
+
+        const authModal   = document.getElementById("authModal")
+        const authEmail   = document.getElementById("authEmail")
+        const authPassword = document.getElementById("authPassword")
+        const authBtn     = document.getElementById("authBtn")
+        const authToggle  = document.getElementById("authToggle")
+        const authToggleText = document.getElementById("authToggleText")
+        const authMessage = document.getElementById("authMessage")
+        const logoutBtn   = document.getElementById("logoutBtn")
+        const userEmailEl = document.getElementById("userEmail")
+
+        let authMode = "login"
+
+        function showMessage(msg, type) {
+            authMessage.textContent = msg
+            if (type === "error")   authMessage.style.cssText = "background:#2d1515; color:#f87171; margin-bottom:1rem;"
+            if (type === "success") authMessage.style.cssText = "background:#0f2d1a; color:#4ade80; margin-bottom:1rem;"
+            authMessage.classList.remove("hidden")
+        }
+
+        function setInputState(input, state) {
+            input.classList.remove("input-ok", "input-error")
+            if (state === "ok")    input.classList.add("input-ok")
+            if (state === "error") input.classList.add("input-error")
+        }
+
+        authToggle.onclick = () => {
+            authMode = authMode === "login" ? "register" : "login"
+            authMessage.classList.add("hidden")
+            authEmail.value = ""
+            authPassword.value = ""
+            setInputState(authEmail, null)
+            setInputState(authPassword, null)
+            if (authMode === "register") {
+                authBtn.textContent        = "REGISTRARSE"
+                authToggleText.textContent = "¿Ya tienes cuenta?"
+                authToggle.textContent     = "Inicia sesión"
+            } else {
+                authBtn.textContent        = "ENTRAR"
+                authToggleText.textContent = "¿No tienes cuenta?"
+                authToggle.textContent     = "Regístrate"
+            }
+        }
+
+        authBtn.onclick = async () => {
+            const email    = authEmail.value.trim()
+            const password = authPassword.value
+            if (!email || !password) {
+                showMessage("Rellena email y contraseña", "error")
+                if (!email)    setInputState(authEmail, "error")
+                if (!password) setInputState(authPassword, "error")
+                return
+            }
+            authBtn.textContent = "..."
+            authBtn.disabled    = true
+            let error
+            if (authMode === "login") {
+                const res = await sb.auth.signInWithPassword({ email, password })
+                error = res.error
+            } else {
+                const res = await sb.auth.signUp({ email, password })
+                error = res.error
+            }
+            authBtn.disabled    = false
+            authBtn.textContent = authMode === "login" ? "ENTRAR" : "REGISTRARSE"
+            if (error) {
+                showMessage(translateError(error.message), "error")
+                setInputState(authEmail, "error")
+                setInputState(authPassword, "error")
+            }
+        }
+
+        logoutBtn.onclick = async () => { await sb.auth.signOut() }
+
+        function translateError(msg) {
+            if (msg.includes("Invalid login"))      return "Email o contraseña incorrectos"
+            if (msg.includes("already registered")) return "Este email ya está registrado"
+            if (msg.includes("Password should"))    return "La contraseña debe tener al menos 6 caracteres"
+            if (msg.includes("valid email"))        return "Introduce un email válido"
+            return msg
+        }
+
+        // ─── SESSION ─────────────────────────────────────────────────────────────
+
+        sb.auth.onAuthStateChange((_event, session) => {
+            if (session) {
+                authModal.style.display = "none"
+                userEmailEl.textContent = session.user.email
+                loadWorkouts()
+            } else {
+                authModal.style.display = "flex"
+                userEmailEl.textContent = ""
+            }
+        })
+
+        // ─── WORKOUTS ─────────────────────────────────────────────────────────────
+
+        const workoutList = document.getElementById("workoutList")
+
+        async function loadWorkouts() {
+
+            workoutList.innerHTML = `
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            `
+
+            const { data, error } = await sb
+                .from("workouts")
+                .select("*")
+                .order("created_at", { ascending: false })
+
+            if (error) {
+                workoutList.innerHTML = renderError(error.message)
+                return
+            }
+
+            if (!data || data.length === 0) {
+                workoutList.innerHTML = renderEmpty()
+                return
+            }
+
+            workoutList.innerHTML = ""
+            data.forEach(w => workoutList.appendChild(buildCard(w)))
+
+        }
+
+        function buildCard(w) {
+
+            const totalMin   = (w.walk_minutes + w.run_minutes) * w.cycles
+            const hours      = Math.floor(totalMin / 60)
+            const mins       = totalMin % 60
+            const durationStr = hours > 0
+                ? `${hours}h ${mins}m`
+                : `${mins} min`
+
+            const date = new Date(w.created_at)
+            const dateStr = date.toLocaleDateString("es-ES", {
+                day:   "numeric",
+                month: "short",
+                year:  "numeric"
+            })
+            const timeStr = date.toLocaleTimeString("es-ES", {
+                hour:   "2-digit",
+                minute: "2-digit"
+            })
+
+            const card = document.createElement("div")
+            card.className = "workout-card"
+            card.dataset.id = w.id
+
+            card.innerHTML = `
+                <div class="flex-1 min-w-0">
+                    <p class="text-xs text-gray-500 mb-2">${dateStr} · ${timeStr}</p>
+                    <div class="flex gap-5">
+                        <div class="stat">
+                            <span class="stat-value">${Math.round(w.walk_minutes)}<span style="font-size:0.7rem;color:#999;font-weight:400">m</span></span>
+                            <span class="stat-label">Caminar</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" style="color:#ff6b6b">${Math.round(w.run_minutes)}<span style="font-size:0.7rem;color:#999;font-weight:400">m</span></span>
+                            <span class="stat-label">Correr</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value">${Math.round(w.cycles)}</span>
+                            <span class="stat-label">Series</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-value" style="font-size:0.95rem">${durationStr}</span>
+                            <span class="stat-label">Total</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="delete-btn" title="Eliminar entrenamiento">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M9 3h6l1 1h4v2H4V4h4L9 3zm10 4v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7h14zm-9 3v7h2v-7h-2zm4 0v7h2v-7h-2z"/>
+                    </svg>
+                </button>
+            `
+
+            card.querySelector(".delete-btn").onclick = () => confirmDelete(w.id, card)
+
+            return card
+        }
+
+        function renderEmpty() {
+            return `
+                <div class="flex flex-col items-center justify-center flex-1 py-20 text-center px-4">
+                    <div style="font-size:3rem;margin-bottom:1rem;opacity:0.3">🏃</div>
+                    <p class="font-semibold text-gray-300 mb-1">Sin entrenamientos aún</p>
+                    <p class="text-sm text-gray-500">
+                        Cuando completes un entrenamiento aparecerá aquí.
+                    </p>
+                    <a href="app.html"
+                       class="mt-6 px-6 py-3 rounded-full font-bold text-sm text-black"
+                       style="background:#d7ff00">
+                        EMPEZAR A ENTRENAR
+                    </a>
+                </div>
+            `
+        }
+
+        function renderError(msg) {
+            return `
+                <div class="flex flex-col items-center justify-center flex-1 py-20 text-center px-4">
+                    <p class="text-sm text-red-400">Error al cargar entrenamientos</p>
+                    <p class="text-xs text-gray-600 mt-1">${msg}</p>
+                    <button onclick="loadWorkouts()"
+                        class="mt-4 px-5 py-2 rounded-full border border-gray-600 text-sm text-gray-300">
+                        Reintentar
+                    </button>
+                </div>
+            `
+        }
+
+        // ─── CONFIRM & DELETE ─────────────────────────────────────────────────────
+
+        const confirmOverlay = document.getElementById("confirmOverlay")
+        const confirmYes     = document.getElementById("confirmYes")
+        const confirmNo      = document.getElementById("confirmNo")
+
+        let pendingDeleteId   = null
+        let pendingDeleteCard = null
+
+        function confirmDelete(id, card) {
+            pendingDeleteId   = id
+            pendingDeleteCard = card
+            confirmOverlay.classList.remove("hidden")
+            confirmOverlay.classList.add("flex")
+        }
+
+        function closeConfirm() {
+            confirmOverlay.classList.add("hidden")
+            confirmOverlay.classList.remove("flex")
+            pendingDeleteId   = null
+            pendingDeleteCard = null
+        }
+
+        confirmNo.onclick = closeConfirm
+
+        confirmOverlay.onclick = (e) => {
+            if (e.target === confirmOverlay) closeConfirm()
+        }
+
+        confirmYes.onclick = async () => {
+
+            if (!pendingDeleteId) return
+
+            confirmYes.textContent = "..."
+            confirmYes.disabled    = true
+
+            const { error } = await sb
+                .from("workouts")
+                .delete()
+                .eq("id", pendingDeleteId)
+
+            confirmYes.textContent = "Eliminar"
+            confirmYes.disabled    = false
+
+            if (error) {
+                closeConfirm()
+                alert("No se pudo eliminar el entrenamiento. Inténtalo de nuevo.")
+                return
+            }
+
+            // Animate card out
+            if (pendingDeleteCard) {
+                pendingDeleteCard.classList.add("deleting")
+                setTimeout(() => {
+                    pendingDeleteCard.remove()
+                    if (workoutList.children.length === 0) {
+                        workoutList.innerHTML = renderEmpty()
+                    }
+                }, 320)
+            }
+
+            closeConfirm()
+
+        }
+
+    </script>
+
+</body>
+</html>
