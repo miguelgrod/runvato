@@ -817,6 +817,17 @@
             iconSoundOff.classList.toggle("hidden", !music.muted)
         }
 
+        // ─── DEBUG ────────────────────────────────────────────────────────────────
+
+        window.debugFinish = () => {
+            if (!timer) { console.warn("No hay entrenamiento activo"); return }
+            clearInterval(timer)
+            cycle = cycles
+            phase = "run"
+            remaining = 0
+            timer = setInterval(tick, 1000)
+        }
+
         // ─── SAVE WORKOUT DIALOG ──────────────────────────────────────────────────
 
         const saveOverlay = document.getElementById("saveOverlay")
