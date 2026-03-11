@@ -175,7 +175,7 @@ font-size:clamp(2.5rem, 10vw, 4rem);
 <span class="sliderValue"><span id="walkValue">1</span> min</span>
 </div>
 
-<input id="walkSlider" type="range" min="1" max="10" value="1" class="slider">
+<input id="walkSlider" type="range" min="1" max="10" step="0.01" value="1" class="slider">
 
 </div>
 
@@ -187,7 +187,7 @@ font-size:clamp(2.5rem, 10vw, 4rem);
 <span class="sliderValue"><span id="runValue">3</span> min</span>
 </div>
 
-<input id="runSlider" type="range" min="1" max="10" value="3" class="slider">
+<input id="runSlider" type="range" min="1" max="10" step="0.01" value="3" class="slider">
 
 </div>
 
@@ -195,11 +195,11 @@ font-size:clamp(2.5rem, 10vw, 4rem);
 <div class="sliderBlock">
 
 <div class="sliderLabel">
-<span>Ciclos</span>
+<span>Series</span>
 <span class="sliderValue" id="cycleValue">5</span>
 </div>
 
-<input id="cycleSlider" type="range" min="1" max="20" value="5" class="slider">
+<input id="cycleSlider" type="range" min="1" max="20" step="0.01" value="5" class="slider">
 
 </div>
 
@@ -334,9 +334,9 @@ if(i!==-1)activeClones.splice(i,1)
 s.play().catch(()=>{})
 }
 
-walkSlider.oninput=()=>walkValue.textContent=walkSlider.value
-runSlider.oninput=()=>runValue.textContent=runSlider.value
-cycleSlider.oninput=()=>cycleValue.textContent=cycleSlider.value
+walkSlider.oninput=()=>walkValue.textContent=Math.round(walkSlider.value)
+runSlider.oninput=()=>runValue.textContent=Math.round(runSlider.value)
+cycleSlider.oninput=()=>cycleValue.textContent=Math.round(cycleSlider.value)
 
 let timer=null
 let remaining=0
@@ -369,9 +369,9 @@ function startTraining(){
 
 if(timer)return
 
-walkTime=parseInt(walkSlider.value)*60
-runTime=parseInt(runSlider.value)*60
-cycles=parseInt(cycleSlider.value)
+walkTime=Math.round(walkSlider.value)*60
+runTime=Math.round(runSlider.value)*60
+cycles=Math.round(cycleSlider.value)
 
 totalTime=(walkTime+runTime)*cycles
 
@@ -442,7 +442,7 @@ remaining=walkTime
 
 }
 
-cycleLabel.textContent="Ciclo "+cycle+" / "+cycles
+cycleLabel.textContent="Serie "+cycle+" / "+cycles
 
 }
 
