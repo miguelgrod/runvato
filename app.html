@@ -9,6 +9,7 @@
     <title>Runvato</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
     <style>
 
@@ -135,11 +136,63 @@
             font-size: clamp(2.5rem, 10vw, 4rem);
         }
 
+        /* ---------- AUTH INPUT ---------- */
+
+        .auth-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #1f1f1f;
+            border: 1px solid #333;
+            border-radius: 0.75rem;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .auth-input:focus {
+            border-color: #d7ff00;
+        }
+
+        .auth-input::placeholder {
+            color: #555;
+        }
+
     </style>
 
 </head>
 
 <body class="text-white">
+
+    <!-- AUTH MODAL -->
+
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+
+        <div class="w-full max-w-sm px-6 py-8 mx-4" style="background:#111; border-radius:1.25rem;">
+
+            <h2 class="text-2xl font-bold mb-1 text-center">RUNVATO</h2>
+            <p id="authSubtitle" class="text-center text-gray-400 text-sm mb-6">Inicia sesión para continuar</p>
+
+            <div id="authError" class="hidden mb-4 text-red-400 text-sm text-center px-2"></div>
+
+            <input id="authEmail" type="email" placeholder="Email" class="auth-input mb-3">
+
+            <input id="authPassword" type="password" placeholder="Contraseña" class="auth-input mb-5">
+
+            <button id="authBtn" class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold mb-4">
+                ENTRAR
+            </button>
+
+            <p class="text-center text-sm text-gray-400">
+                <span id="authToggleText">¿No tienes cuenta?</span>
+                <button id="authToggle" class="text-[#d7ff00] ml-1 font-semibold">Regístrate</button>
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- APP -->
 
     <div class="appContainer w-full px-6 py-5">
 
@@ -149,17 +202,28 @@
 
             <h1 class="text-3xl font-bold">RUNVATO</h1>
 
-            <div id="musicToggle" class="cursor-pointer">
+            <div class="flex items-center gap-4">
 
-                <svg id="iconSoundOn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
-                    <path d="M3 9v6h4l5 4V5L7 9H3z"/>
-                </svg>
+                <button id="logoutBtn" title="Cerrar sesión" class="opacity-50 hover:opacity-100 transition-opacity">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
+                        <path d="M16 13v-2H7V8l-5 4 5 4v-3z"/>
+                        <path d="M20 3h-9a2 2 0 0 0-2 2v4h2V5h9v14h-9v-4H9v4a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+                    </svg>
+                </button>
 
-                <svg id="iconSoundOff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24" class="hidden">
-                    <path d="M3 9v6h4l5 4V5L7 9H3z"/>
-                    <line x1="16" y1="8" x2="22" y2="16" stroke="white" stroke-width="2"/>
-                    <line x1="22" y1="8" x2="16" y2="16" stroke="white" stroke-width="2"/>
-                </svg>
+                <div id="musicToggle" class="cursor-pointer">
+
+                    <svg id="iconSoundOn" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24">
+                        <path d="M3 9v6h4l5 4V5L7 9H3z"/>
+                    </svg>
+
+                    <svg id="iconSoundOff" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="white" viewBox="0 0 24 24" class="hidden">
+                        <path d="M3 9v6h4l5 4V5L7 9H3z"/>
+                        <line x1="16" y1="8" x2="22" y2="16" stroke="white" stroke-width="2"/>
+                        <line x1="22" y1="8" x2="16" y2="16" stroke="white" stroke-width="2"/>
+                    </svg>
+
+                </div>
 
             </div>
 
@@ -279,29 +343,159 @@
 
     <script>
 
+        // ─── SUPABASE ────────────────────────────────────────────────────────────
+
+        const SUPABASE_URL  = "https://criayuvoihnadarffnvk.supabase.co"
+        const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyaWF5dXZvaWhuYWRhcmZmbnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjAzOTIsImV4cCI6MjA4ODgzNjM5Mn0.5Qm4OEUftGMhrbhvB3rTF6Vsx86RPvp17mG75_ngpMQ"
+
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON)
+
+        // ─── AUTH UI ─────────────────────────────────────────────────────────────
+
+        const authModal       = document.getElementById("authModal")
+        const authEmail       = document.getElementById("authEmail")
+        const authPassword    = document.getElementById("authPassword")
+        const authBtn         = document.getElementById("authBtn")
+        const authToggle      = document.getElementById("authToggle")
+        const authToggleText  = document.getElementById("authToggleText")
+        const authSubtitle    = document.getElementById("authSubtitle")
+        const authError       = document.getElementById("authError")
+        const logoutBtn       = document.getElementById("logoutBtn")
+
+        let authMode = "login" // "login" | "register"
+
+        authToggle.onclick = () => {
+            authMode = authMode === "login" ? "register" : "login"
+            authError.classList.add("hidden")
+            if (authMode === "register") {
+                authBtn.textContent       = "REGISTRARSE"
+                authSubtitle.textContent  = "Crea tu cuenta gratis"
+                authToggleText.textContent = "¿Ya tienes cuenta?"
+                authToggle.textContent    = "Inicia sesión"
+            } else {
+                authBtn.textContent       = "ENTRAR"
+                authSubtitle.textContent  = "Inicia sesión para continuar"
+                authToggleText.textContent = "¿No tienes cuenta?"
+                authToggle.textContent    = "Regístrate"
+            }
+        }
+
+        authBtn.onclick = async () => {
+            const email    = authEmail.value.trim()
+            const password = authPassword.value
+
+            if (!email || !password) {
+                showAuthError("Rellena email y contraseña")
+                return
+            }
+
+            authBtn.textContent = "..."
+            authBtn.disabled    = true
+            authError.classList.add("hidden")
+
+            let error
+
+            if (authMode === "login") {
+                const res = await sb.auth.signInWithPassword({ email, password })
+                error = res.error
+            } else {
+                const res = await sb.auth.signUp({ email, password })
+                error = res.error
+            }
+
+            authBtn.disabled = false
+            authBtn.textContent = authMode === "login" ? "ENTRAR" : "REGISTRARSE"
+
+            if (error) {
+                showAuthError(translateError(error.message))
+            }
+        }
+
+        logoutBtn.onclick = async () => {
+            await sb.auth.signOut()
+        }
+
+        function showAuthError(msg) {
+            authError.textContent = msg
+            authError.classList.remove("hidden")
+        }
+
+        function translateError(msg) {
+            if (msg.includes("Invalid login"))    return "Email o contraseña incorrectos"
+            if (msg.includes("already registered")) return "Este email ya está registrado"
+            if (msg.includes("Password should"))  return "La contraseña debe tener al menos 6 caracteres"
+            if (msg.includes("valid email"))       return "Introduce un email válido"
+            return msg
+        }
+
+        // ─── SESSION ─────────────────────────────────────────────────────────────
+
+        sb.auth.onAuthStateChange((_event, session) => {
+            if (session) {
+                authModal.style.display = "none"
+                loadSettings()
+            } else {
+                authModal.style.display = "flex"
+            }
+        })
+
+        // ─── SETTINGS ────────────────────────────────────────────────────────────
+
+        async function loadSettings() {
+            const { data } = await sb.from("settings").select().single()
+            if (data) {
+                walkSlider.value = data.walk_minutes
+                runSlider.value  = data.run_minutes
+                cycleSlider.value = data.cycles
+                walkValue.textContent  = Math.round(data.walk_minutes)
+                runValue.textContent   = Math.round(data.run_minutes)
+                cycleValue.textContent = Math.round(data.cycles)
+            }
+        }
+
+        let saveTimeout
+        function scheduleSave() {
+            clearTimeout(saveTimeout)
+            saveTimeout = setTimeout(saveSettings, 800)
+        }
+
+        async function saveSettings() {
+            const { data: { user } } = await sb.auth.getUser()
+            if (!user) return
+            await sb.from("settings").upsert({
+                user_id:       user.id,
+                walk_minutes:  parseFloat(walkSlider.value),
+                run_minutes:   parseFloat(runSlider.value),
+                cycles:        parseInt(cycleSlider.value),
+                updated_at:    new Date().toISOString()
+            }, { onConflict: "user_id" })
+        }
+
+        // ─── APP ─────────────────────────────────────────────────────────────────
+
         const walkSlider = document.getElementById("walkSlider")
-        const runSlider = document.getElementById("runSlider")
+        const runSlider  = document.getElementById("runSlider")
         const cycleSlider = document.getElementById("cycleSlider")
 
-        const walkValue = document.getElementById("walkValue")
-        const runValue = document.getElementById("runValue")
+        const walkValue  = document.getElementById("walkValue")
+        const runValue   = document.getElementById("runValue")
         const cycleValue = document.getElementById("cycleValue")
 
-        const timerLabel = document.getElementById("timer")
+        const timerLabel    = document.getElementById("timer")
         const progressTotal = document.getElementById("progressTotal")
-        const progressRing = document.getElementById("progressRing")
-        const cycleLabel = document.getElementById("cycleLabel")
+        const progressRing  = document.getElementById("progressRing")
+        const cycleLabel    = document.getElementById("cycleLabel")
 
-        const playBtn = document.getElementById("playBtn")
+        const playBtn  = document.getElementById("playBtn")
         const pauseBtn = document.getElementById("pauseBtn")
 
-        const playSound = document.getElementById("playSound")
-        const warn10 = document.getElementById("warn10")
-        const warn3 = document.getElementById("warn3")
-        const halfRun = document.getElementById("halfRun")
-        const finishRun = document.getElementById("finishRun")
+        const playSound    = document.getElementById("playSound")
+        const warn10       = document.getElementById("warn10")
+        const warn3        = document.getElementById("warn3")
+        const halfRun      = document.getElementById("halfRun")
+        const finishRun    = document.getElementById("finishRun")
         const completeSound = document.getElementById("completeSound")
-        const music = document.getElementById("music")
+        const music        = document.getElementById("music")
 
         const activeClones = []
 
@@ -329,9 +523,9 @@
             s.play().catch(() => {})
         }
 
-        walkSlider.oninput = () => walkValue.textContent = Math.round(walkSlider.value)
-        runSlider.oninput = () => runValue.textContent = Math.round(runSlider.value)
-        cycleSlider.oninput = () => cycleValue.textContent = Math.round(cycleSlider.value)
+        walkSlider.oninput = () => { walkValue.textContent = Math.round(walkSlider.value); scheduleSave() }
+        runSlider.oninput  = () => { runValue.textContent  = Math.round(runSlider.value);  scheduleSave() }
+        cycleSlider.oninput = () => { cycleValue.textContent = Math.round(cycleSlider.value); scheduleSave() }
 
         let timer = null
         let remaining = 0
@@ -339,16 +533,16 @@
         let cycle = 1
 
         let walkTime = 0
-        let runTime = 0
-        let cycles = 0
+        let runTime  = 0
+        let cycles   = 0
 
         let totalTime = 0
-        let elapsed = 0
+        let elapsed   = 0
 
         const circumference = 628
 
         function formatTime(s) {
-            let m = Math.floor(s / 60)
+            let m   = Math.floor(s / 60)
             let sec = s % 60
             return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0")
         }
@@ -356,7 +550,7 @@
         function updateRing() {
             let totalInterval = phase === "walk" ? walkTime : runTime
             let percent = (totalInterval - remaining) / totalInterval
-            let offset = circumference - (percent * circumference)
+            let offset  = circumference - (percent * circumference)
             progressRing.style.strokeDashoffset = offset
             progressRing.style.stroke = phase === "run" ? "#ff6b6b" : "#d7ff00"
         }
@@ -366,15 +560,15 @@
             if (timer) return
 
             walkTime = Math.round(walkSlider.value) * 60
-            runTime = Math.round(runSlider.value) * 60
-            cycles = Math.round(cycleSlider.value)
+            runTime  = Math.round(runSlider.value) * 60
+            cycles   = Math.round(cycleSlider.value)
 
             totalTime = (walkTime + runTime) * cycles
 
             remaining = walkTime
-            phase = "walk"
-            cycle = 1
-            elapsed = 0
+            phase     = "walk"
+            cycle     = 1
+            elapsed   = 0
 
             playAlert(playSound)
 
@@ -406,7 +600,7 @@
 
             if (phase === "walk") {
                 if (remaining === 13) playAlert(warn10)
-                if (remaining === 3) playAlert(warn3)
+                if (remaining === 3)  playAlert(warn3)
             }
 
             if (phase === "run") {
@@ -417,7 +611,7 @@
             if (remaining <= 0) {
 
                 if (phase === "walk") {
-                    phase = "run"
+                    phase     = "run"
                     remaining = runTime
                 } else {
 
@@ -431,7 +625,7 @@
                     playAlert(finishRun)
 
                     cycle++
-                    phase = "walk"
+                    phase     = "walk"
                     remaining = walkTime
 
                 }
@@ -507,16 +701,13 @@
 
         }
 
-        const iconSoundOn = document.getElementById("iconSoundOn")
+        const iconSoundOn  = document.getElementById("iconSoundOn")
         const iconSoundOff = document.getElementById("iconSoundOff")
 
         musicToggle.onclick = () => {
-
             music.muted = !music.muted
-
             iconSoundOn.classList.toggle("hidden", music.muted)
             iconSoundOff.classList.toggle("hidden", !music.muted)
-
         }
 
     </script>
