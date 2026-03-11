@@ -862,7 +862,7 @@
             })
 
             if (error) {
-                saveMsg.textContent = "Error al guardar. Inténtalo de nuevo."
+                saveMsg.textContent = error.message || "Error al guardar. Inténtalo de nuevo."
                 saveMsg.style.cssText = "color:#f87171;"
                 saveMsg.classList.remove("hidden")
                 btn.disabled = false
