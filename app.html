@@ -158,6 +158,9 @@
             color: #555;
         }
 
+        .auth-input.input-ok    { border-color: #4ade80; }
+        .auth-input.input-error { border-color: #f87171; }
+
     </style>
 
 </head>
@@ -173,16 +176,16 @@
             <h2 class="text-2xl font-bold mb-1 text-center">RUNVATO</h2>
             <p id="authSubtitle" class="text-center text-gray-400 text-sm mb-6">Inicia sesión para continuar</p>
 
-            <div id="authError" class="hidden mb-4 text-red-400 text-sm text-center px-2"></div>
+            <div id="authMessage" class="hidden mb-4 text-sm text-center px-2 py-2 rounded-lg"></div>
 
             <input id="authEmail" type="email" placeholder="Email" class="auth-input mb-3">
 
             <div class="relative mb-5">
                 <input id="authPassword" type="password" placeholder="Contraseña" class="auth-input">
-                <div id="passwordTooltip" class="hidden absolute left-0 right-0 mt-2 px-3 py-2 rounded-lg text-xs text-gray-300" style="background:#1f1f1f; border:1px solid #333; top:100%;">
-                    <p class="font-semibold text-[#d7ff00] mb-1">La contraseña debe tener:</p>
+                <div id="passwordTooltip" class="hidden absolute left-0 right-0 mt-2 px-3 py-2 rounded-lg text-xs" style="background:#1a1a1a; border:1px solid #333; top:100%; transition: border-color 0.2s;">
+                    <p class="font-semibold mb-1" id="tooltipTitle" style="color:#aaa;">La contraseña debe tener:</p>
                     <ul class="space-y-0.5 list-none">
-                        <li id="req-length">○ Mínimo 6 caracteres</li>
+                        <li id="req-length" class="text-gray-400">○ Mínimo 6 caracteres</li>
                     </ul>
                 </div>
             </div>
@@ -367,14 +370,48 @@
         const authToggle      = document.getElementById("authToggle")
         const authToggleText  = document.getElementById("authToggleText")
         const authSubtitle    = document.getElementById("authSubtitle")
-        const authError       = document.getElementById("authError")
+        const authMessage     = document.getElementById("authMessage")
         const logoutBtn       = document.getElementById("logoutBtn")
-
-        let authMode = "login" // "login" | "register"
-
         const passwordTooltip = document.getElementById("passwordTooltip")
+        const tooltipTitle    = document.getElementById("tooltipTitle")
         const reqLength       = document.getElementById("req-length")
 
+        let authMode = "login"
+
+        function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) }
+        function isValidPassword(v) { return v.length >= 6 }
+
+        function setInputState(input, state) {
+            input.classList.remove("input-ok", "input-error")
+            if (state === "ok")    input.classList.add("input-ok")
+            if (state === "error") input.classList.add("input-error")
+        }
+
+        function showMessage(msg, type) {
+            authMessage.textContent = msg
+            authMessage.className = "mb-4 text-sm text-center px-2 py-2 rounded-lg"
+            if (type === "error")   authMessage.style.cssText = "background:#2d1515; color:#f87171; margin-bottom:1rem;"
+            if (type === "success") authMessage.style.cssText = "background:#0f2d1a; color:#4ade80; margin-bottom:1rem;"
+            if (type === "info")    authMessage.style.cssText = "background:#1a1f2d; color:#93c5fd; margin-bottom:1rem;"
+            authMessage.classList.remove("hidden")
+        }
+
+        function hideMessage() { authMessage.classList.add("hidden") }
+
+        function resetInputStates() {
+            setInputState(authEmail, null)
+            setInputState(authPassword, null)
+        }
+
+        // Email feedback (solo en registro)
+        authEmail.oninput = () => {
+            if (authMode !== "register") return
+            const v = authEmail.value.trim()
+            if (!v) { setInputState(authEmail, null); return }
+            setInputState(authEmail, isValidEmail(v) ? "ok" : "error")
+        }
+
+        // Password tooltip y feedback
         authPassword.onfocus = () => {
             if (authMode === "register") passwordTooltip.classList.remove("hidden")
         }
@@ -382,26 +419,32 @@
             passwordTooltip.classList.add("hidden")
         }
         authPassword.oninput = () => {
-            const v = authPassword.value
-            const ok = v.length >= 6
+            if (authMode !== "register") return
+            const ok = isValidPassword(authPassword.value)
             reqLength.textContent = (ok ? "✓" : "○") + " Mínimo 6 caracteres"
-            reqLength.style.color = ok ? "#d7ff00" : ""
+            reqLength.style.color = ok ? "#4ade80" : "#f87171"
+            tooltipTitle.style.color = ok ? "#4ade80" : "#f87171"
+            passwordTooltip.style.borderColor = ok ? "#4ade80" : "#f87171"
+            setInputState(authPassword, ok ? "ok" : "error")
         }
 
         authToggle.onclick = () => {
             authMode = authMode === "login" ? "register" : "login"
-            authError.classList.add("hidden")
+            hideMessage()
             passwordTooltip.classList.add("hidden")
+            resetInputStates()
+            authEmail.value = ""
+            authPassword.value = ""
             if (authMode === "register") {
-                authBtn.textContent       = "REGISTRARSE"
-                authSubtitle.textContent  = "Crea tu cuenta gratis"
+                authBtn.textContent        = "REGISTRARSE"
+                authSubtitle.textContent   = "Crea tu cuenta gratis"
                 authToggleText.textContent = "¿Ya tienes cuenta?"
-                authToggle.textContent    = "Inicia sesión"
+                authToggle.textContent     = "Inicia sesión"
             } else {
-                authBtn.textContent       = "ENTRAR"
-                authSubtitle.textContent  = "Inicia sesión para continuar"
+                authBtn.textContent        = "ENTRAR"
+                authSubtitle.textContent   = "Inicia sesión para continuar"
                 authToggleText.textContent = "¿No tienes cuenta?"
-                authToggle.textContent    = "Regístrate"
+                authToggle.textContent     = "Regístrate"
             }
         }
 
@@ -410,13 +453,28 @@
             const password = authPassword.value
 
             if (!email || !password) {
-                showAuthError("Rellena email y contraseña")
+                showMessage("Rellena email y contraseña", "error")
+                if (!email)    setInputState(authEmail, "error")
+                if (!password) setInputState(authPassword, "error")
                 return
+            }
+
+            if (authMode === "register") {
+                if (!isValidEmail(email)) {
+                    showMessage("Introduce un email válido", "error")
+                    setInputState(authEmail, "error")
+                    return
+                }
+                if (!isValidPassword(password)) {
+                    showMessage("La contraseña debe tener al menos 6 caracteres", "error")
+                    setInputState(authPassword, "error")
+                    return
+                }
             }
 
             authBtn.textContent = "..."
             authBtn.disabled    = true
-            authError.classList.add("hidden")
+            hideMessage()
 
             let error
 
@@ -428,11 +486,16 @@
                 error = res.error
             }
 
-            authBtn.disabled = false
+            authBtn.disabled    = false
             authBtn.textContent = authMode === "login" ? "ENTRAR" : "REGISTRARSE"
 
             if (error) {
-                showAuthError(translateError(error.message))
+                showMessage(translateError(error.message), "error")
+                setInputState(authEmail, "error")
+                setInputState(authPassword, "error")
+            } else if (authMode === "register") {
+                showMessage("✓ Registro completado — revisa tu email para confirmar la cuenta", "success")
+                resetInputStates()
             }
         }
 
@@ -440,16 +503,11 @@
             await sb.auth.signOut()
         }
 
-        function showAuthError(msg) {
-            authError.textContent = msg
-            authError.classList.remove("hidden")
-        }
-
         function translateError(msg) {
-            if (msg.includes("Invalid login"))    return "Email o contraseña incorrectos"
+            if (msg.includes("Invalid login"))      return "Email o contraseña incorrectos"
             if (msg.includes("already registered")) return "Este email ya está registrado"
-            if (msg.includes("Password should"))  return "La contraseña debe tener al menos 6 caracteres"
-            if (msg.includes("valid email"))       return "Introduce un email válido"
+            if (msg.includes("Password should"))    return "La contraseña debe tener al menos 6 caracteres"
+            if (msg.includes("valid email"))        return "Introduce un email válido"
             return msg
         }
 
