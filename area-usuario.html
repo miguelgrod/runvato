@@ -634,7 +634,9 @@
         function renderEmpty() {
             return `
                 <div class="flex flex-col items-center justify-center flex-1 py-20 text-center px-4">
-                    <div style="font-size:3rem;margin-bottom:1rem;opacity:0.3">🏃</div>
+                    <div style="display:inline-flex;align-items:center;justify-content:center;padding:1.25rem;background:rgba(215,255,0,0.15);border-radius:9999px;border:1px solid rgba(215,255,0,0.25);margin-bottom:1rem;">
+                        <span class="material-symbols-outlined" style="color:#d7ff00;font-size:3.5rem;font-variation-settings:'FILL' 1,'wght' 700;">directions_run</span>
+                    </div>
                     <p class="font-semibold text-gray-300 mb-1">Sin entrenamientos aún</p>
                     <p class="text-sm text-gray-500">Cuando completes un entrenamiento aparecerá aquí.</p>
                     <a href="app.html" class="mt-6 px-6 py-3 rounded-full font-bold text-sm text-black" style="background:#d7ff00">EMPEZAR A ENTRENAR</a>
