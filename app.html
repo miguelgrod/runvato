@@ -9,6 +9,7 @@
     <title>Runvato</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
     <style>
@@ -31,6 +32,15 @@
             background-repeat: no-repeat;
             opacity: 0.1;
             z-index: -1;
+        }
+
+        /* ---------- LOGO ---------- */
+
+        .runvato-font {
+            font-family: 'Lexend', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            font-style: italic;
         }
 
         /* ---------- SLIDER STYLE ---------- */
@@ -211,7 +221,7 @@
 
         <div class="flex justify-between items-center">
 
-            <h1 class="text-3xl font-bold">RUNVATO</h1>
+            <h1 class="runvato-font text-3xl uppercase">RUNVATO</h1>
 
             <div class="flex items-center gap-4">
 
@@ -241,7 +251,7 @@
 
         <!-- SLIDERS -->
 
-        <div id="slidersSection">
+        <div id="slidersSection" style="margin-top: 150px;">
 
             <div class="sliderBlock">
 
