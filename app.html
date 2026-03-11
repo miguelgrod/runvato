@@ -177,7 +177,15 @@
 
             <input id="authEmail" type="email" placeholder="Email" class="auth-input mb-3">
 
-            <input id="authPassword" type="password" placeholder="Contraseña" class="auth-input mb-5">
+            <div class="relative mb-5">
+                <input id="authPassword" type="password" placeholder="Contraseña" class="auth-input">
+                <div id="passwordTooltip" class="hidden absolute left-0 right-0 mt-2 px-3 py-2 rounded-lg text-xs text-gray-300" style="background:#1f1f1f; border:1px solid #333; top:100%;">
+                    <p class="font-semibold text-[#d7ff00] mb-1">La contraseña debe tener:</p>
+                    <ul class="space-y-0.5 list-none">
+                        <li id="req-length">○ Mínimo 6 caracteres</li>
+                    </ul>
+                </div>
+            </div>
 
             <button id="authBtn" class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold mb-4">
                 ENTRAR
@@ -364,9 +372,26 @@
 
         let authMode = "login" // "login" | "register"
 
+        const passwordTooltip = document.getElementById("passwordTooltip")
+        const reqLength       = document.getElementById("req-length")
+
+        authPassword.onfocus = () => {
+            if (authMode === "register") passwordTooltip.classList.remove("hidden")
+        }
+        authPassword.onblur = () => {
+            passwordTooltip.classList.add("hidden")
+        }
+        authPassword.oninput = () => {
+            const v = authPassword.value
+            const ok = v.length >= 6
+            reqLength.textContent = (ok ? "✓" : "○") + " Mínimo 6 caracteres"
+            reqLength.style.color = ok ? "#d7ff00" : ""
+        }
+
         authToggle.onclick = () => {
             authMode = authMode === "login" ? "register" : "login"
             authError.classList.add("hidden")
+            passwordTooltip.classList.add("hidden")
             if (authMode === "register") {
                 authBtn.textContent       = "REGISTRARSE"
                 authSubtitle.textContent  = "Crea tu cuenta gratis"
