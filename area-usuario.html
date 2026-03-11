@@ -10,8 +10,17 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
     <style>
+
+        .runvato-font {
+            font-family: 'Lexend', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            font-style: italic;
+        }
 
         body {
             background: #000;
@@ -234,7 +243,10 @@
 
         <div class="w-full max-w-sm px-6 py-8 mx-4" style="background:#111; border-radius:1.25rem;">
 
-            <h2 class="text-2xl font-bold mb-1 text-center">RUNVATO</h2>
+            <h2 class="flex items-center justify-center gap-1 mb-1">
+                <span class="material-symbols-outlined text-[#d7ff00] text-4xl" style="font-variation-settings:'FILL' 1,'wght' 700">bolt</span>
+                <span class="runvato-font text-white text-2xl uppercase">Runvato</span>
+            </h2>
             <p class="text-center text-gray-400 text-sm mb-6">Inicia sesión para continuar</p>
 
             <div id="authMessage" class="hidden mb-4 text-sm text-center px-2 py-2 rounded-lg"></div>
