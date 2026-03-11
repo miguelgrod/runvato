@@ -422,7 +422,8 @@
                 } else {
 
                     if (cycle >= cycles) {
-                        playAlert(completeSound)
+                        completeSound.currentTime = 0
+                        completeSound.play().catch(() => {})
                         resetTraining(true)
                         return
                     }
