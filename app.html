@@ -269,7 +269,6 @@
 
     <!-- AUDIOS -->
 
-    <audio id="startSound" src="audio/start.mp3"></audio>
     <audio id="playSound" src="audio/play.mp3"></audio>
     <audio id="warn10" src="audio/warn10.mp3"></audio>
     <audio id="warn3" src="audio/warn3.mp3"></audio>
@@ -296,7 +295,6 @@
         const playBtn = document.getElementById("playBtn")
         const pauseBtn = document.getElementById("pauseBtn")
 
-        const startSound = document.getElementById("startSound")
         const playSound = document.getElementById("playSound")
         const warn10 = document.getElementById("warn10")
         const warn3 = document.getElementById("warn3")
@@ -378,8 +376,7 @@
             cycle = 1
             elapsed = 0
 
-            playAlert(startSound)
-            setTimeout(() => playAlert(playSound), 200)
+            playAlert(playSound)
 
             document.body.classList.add("running")
 
@@ -431,6 +428,7 @@
                     }
 
                     playAlert(finishRun)
+                    playAlert(playSound)
 
                     cycle++
                     phase = "walk"
