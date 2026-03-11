@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 
-    <title>Runvato — Mis entrenamientos</title>
+    <title>Runvato — Área de usuario</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -40,6 +40,88 @@
             flex-direction: column;
         }
 
+        /* ── AUTH INPUT ── */
+
+        .auth-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: #1f1f1f;
+            border: 1px solid #333;
+            border-radius: 0.75rem;
+            color: white;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        .auth-input:focus        { border-color: #d7ff00; }
+        .auth-input::placeholder { color: #555; }
+        .auth-input.input-ok     { border-color: #4ade80; }
+        .auth-input.input-error  { border-color: #f87171; }
+
+        /* ── AVATAR CIRCLE ── */
+
+        .avatar-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #d7ff00;
+        }
+
+        .avatar-circle img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ── TABS ── */
+
+        .tab-bar {
+            display: flex;
+            border-bottom: 1px solid #222;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.75rem 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #555;
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            transition: color 0.2s, border-color 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .tab-btn.active {
+            color: #d7ff00;
+            border-bottom-color: #d7ff00;
+        }
+
+        .tab-panel {
+            display: none;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .tab-panel.active {
+            display: flex;
+        }
+
         /* ── WORKOUT CARD ── */
 
         .workout-card {
@@ -54,17 +136,13 @@
             transition: border-color 0.2s;
         }
 
-        .workout-card:hover {
-            border-color: #333;
-        }
+        .workout-card:hover { border-color: #333; }
 
         .workout-card.deleting {
             opacity: 0;
             transform: translateX(30px);
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
-
-        /* ── STAT PILL ── */
 
         .stat {
             display: flex;
@@ -87,8 +165,6 @@
             letter-spacing: 0.05em;
         }
 
-        /* ── DELETE BTN ── */
-
         .delete-btn {
             flex-shrink: 0;
             width: 36px;
@@ -110,8 +186,6 @@
             background: #2d1515;
         }
 
-        /* ── SKELETON ── */
-
         .skeleton {
             background: #1a1a1a;
             border-radius: 1rem;
@@ -124,24 +198,23 @@
             50%       { opacity: 0.4; }
         }
 
-        /* ── AUTH INPUT ── */
+        /* ── FORM SECTIONS ── */
 
-        .auth-input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: #1f1f1f;
-            border: 1px solid #333;
-            border-radius: 0.75rem;
-            color: white;
-            outline: none;
-            transition: border-color 0.2s;
-            box-sizing: border-box;
+        .form-section {
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 1rem;
+            padding: 1.25rem;
         }
 
-        .auth-input:focus  { border-color: #d7ff00; }
-        .auth-input::placeholder { color: #555; }
-        .auth-input.input-ok    { border-color: #4ade80; }
-        .auth-input.input-error { border-color: #f87171; }
+        .form-label {
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: block;
+            margin-bottom: 0.75rem;
+        }
 
         /* ── CONFIRM OVERLAY ── */
 
@@ -167,12 +240,10 @@
 
             <div id="authMessage" class="hidden mb-4 text-sm text-center px-2 py-2 rounded-lg"></div>
 
-            <input id="authEmail" type="email" placeholder="Email" class="auth-input mb-3">
-            <input id="authPassword" type="password" placeholder="Contraseña" class="auth-input mb-5">
+            <input id="authEmail"    type="email"    placeholder="Email"       class="auth-input mb-3">
+            <input id="authPassword" type="password" placeholder="Contraseña"  class="auth-input mb-5">
 
-            <button id="authBtn" class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold mb-4">
-                ENTRAR
-            </button>
+            <button id="authBtn" class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold mb-4">ENTRAR</button>
 
             <p class="text-center text-sm text-gray-400">
                 <span id="authToggleText">¿No tienes cuenta?</span>
@@ -215,7 +286,7 @@
                 </svg>
             </a>
 
-            <h1 class="text-xl font-bold tracking-wide">MIS ENTRENAMIENTOS</h1>
+            <h1 class="text-xl font-bold tracking-wide">ÁREA DE USUARIO</h1>
 
             <button id="logoutBtn" title="Cerrar sesión" class="opacity-50 hover:opacity-100 transition-opacity">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
@@ -226,23 +297,108 @@
 
         </div>
 
-        <!-- USER EMAIL LABEL -->
+        <!-- PROFILE HEADER (siempre visible) -->
 
-        <p id="userEmail" class="text-xs text-gray-500 mb-5 text-center"></p>
+        <div class="flex items-center gap-4 mb-6">
 
-        <!-- WORKOUT LIST -->
+            <div class="avatar-circle" id="avatarCircle"></div>
 
-        <div id="workoutList" class="flex flex-col gap-3 flex-1">
-
-            <!-- Skeletons shown while loading -->
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
-            <div class="skeleton"></div>
+            <div>
+                <p id="displayName"  class="font-semibold text-white leading-tight"></p>
+                <p id="displayEmail" class="text-sm text-gray-500 mt-0.5"></p>
+            </div>
 
         </div>
 
-        <!-- BOTTOM SPACER -->
-        <div class="h-8"></div>
+        <!-- TAB BAR -->
+
+        <div class="tab-bar">
+            <button class="tab-btn active" data-tab="historial">Historial</button>
+            <button class="tab-btn"        data-tab="personales">Datos personales</button>
+            <button class="tab-btn"        data-tab="acceso">Datos de acceso</button>
+        </div>
+
+        <!-- PANEL: HISTORIAL DE ENTRENAMIENTOS -->
+
+        <div id="panel-historial" class="tab-panel active">
+
+            <div id="workoutList" class="flex flex-col gap-3 flex-1">
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+                <div class="skeleton"></div>
+            </div>
+
+            <div class="h-8"></div>
+
+        </div>
+
+        <!-- PANEL: DATOS PERSONALES -->
+
+        <div id="panel-personales" class="tab-panel">
+
+            <div class="flex flex-col gap-4">
+
+                <!-- Foto de perfil -->
+                <div class="form-section">
+
+                    <span class="form-label">Foto de perfil</span>
+
+                    <div class="flex items-center gap-4">
+
+                        <div class="avatar-circle" id="avatarPreview"></div>
+
+                        <div class="flex flex-col gap-2 flex-1">
+                            <input type="file" id="photoInput" accept="image/*" class="hidden">
+                            <button id="photoBtn"
+                                class="w-full border border-[#d7ff00] text-[#d7ff00] py-2 rounded-full text-sm font-semibold transition-opacity hover:opacity-70">
+                                Cambiar foto
+                            </button>
+                            <p id="photoMsg" class="text-xs text-center hidden"></p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Nombre de usuario -->
+                <div class="form-section">
+
+                    <label class="form-label" for="usernameInput">Nombre de usuario</label>
+                    <input id="usernameInput" type="text" placeholder="Tu nombre" class="auth-input mb-3">
+                    <button id="saveNameBtn"
+                        class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold text-sm">
+                        Guardar nombre
+                    </button>
+                    <p id="nameMsg" class="text-xs text-center mt-2 hidden"></p>
+
+                </div>
+
+            </div>
+
+            <div class="h-8"></div>
+
+        </div>
+
+        <!-- PANEL: DATOS DE ACCESO -->
+
+        <div id="panel-acceso" class="tab-panel">
+
+            <div class="form-section">
+
+                <span class="form-label">Cambiar contraseña</span>
+                <input id="newPassword"     type="password" placeholder="Nueva contraseña"    class="auth-input mb-3">
+                <input id="confirmPassword" type="password" placeholder="Repetir contraseña"  class="auth-input mb-4">
+                <button id="changePasswordBtn"
+                    class="w-full bg-[#d7ff00] text-black py-3 rounded-full font-bold text-sm">
+                    Cambiar contraseña
+                </button>
+                <p id="passwordMsg" class="text-xs text-center mt-3 hidden"></p>
+
+            </div>
+
+            <div class="h-8"></div>
+
+        </div>
 
     </div>
 
@@ -257,19 +413,18 @@
 
         // ─── AUTH UI ─────────────────────────────────────────────────────────────
 
-        const authModal   = document.getElementById("authModal")
-        const authEmail   = document.getElementById("authEmail")
-        const authPassword = document.getElementById("authPassword")
-        const authBtn     = document.getElementById("authBtn")
-        const authToggle  = document.getElementById("authToggle")
+        const authModal      = document.getElementById("authModal")
+        const authEmail      = document.getElementById("authEmail")
+        const authPassword   = document.getElementById("authPassword")
+        const authBtn        = document.getElementById("authBtn")
+        const authToggle     = document.getElementById("authToggle")
         const authToggleText = document.getElementById("authToggleText")
-        const authMessage = document.getElementById("authMessage")
-        const logoutBtn   = document.getElementById("logoutBtn")
-        const userEmailEl = document.getElementById("userEmail")
+        const authMessage    = document.getElementById("authMessage")
+        const logoutBtn      = document.getElementById("logoutBtn")
 
         let authMode = "login"
 
-        function showMessage(msg, type) {
+        function showAuthMessage(msg, type) {
             authMessage.textContent = msg
             if (type === "error")   authMessage.style.cssText = "background:#2d1515; color:#f87171; margin-bottom:1rem;"
             if (type === "success") authMessage.style.cssText = "background:#0f2d1a; color:#4ade80; margin-bottom:1rem;"
@@ -285,7 +440,7 @@
         authToggle.onclick = () => {
             authMode = authMode === "login" ? "register" : "login"
             authMessage.classList.add("hidden")
-            authEmail.value = ""
+            authEmail.value    = ""
             authPassword.value = ""
             setInputState(authEmail, null)
             setInputState(authPassword, null)
@@ -304,7 +459,7 @@
             const email    = authEmail.value.trim()
             const password = authPassword.value
             if (!email || !password) {
-                showMessage("Rellena email y contraseña", "error")
+                showAuthMessage("Rellena email y contraseña", "error")
                 if (!email)    setInputState(authEmail, "error")
                 if (!password) setInputState(authPassword, "error")
                 return
@@ -322,7 +477,7 @@
             authBtn.disabled    = false
             authBtn.textContent = authMode === "login" ? "ENTRAR" : "REGISTRARSE"
             if (error) {
-                showMessage(translateError(error.message), "error")
+                showAuthMessage(translateError(error.message), "error")
                 setInputState(authEmail, "error")
                 setInputState(authPassword, "error")
             }
@@ -343,69 +498,95 @@
         sb.auth.onAuthStateChange((_event, session) => {
             if (session) {
                 authModal.style.display = "none"
-                userEmailEl.textContent = session.user.email
-                loadWorkouts()
+                initUser(session.user)
             } else {
                 authModal.style.display = "flex"
-                userEmailEl.textContent = ""
             }
         })
 
-        // ─── WORKOUTS ─────────────────────────────────────────────────────────────
+        // ─── INIT USER ───────────────────────────────────────────────────────────
+
+        function initUser(user) {
+            const meta       = user.user_metadata || {}
+            const username   = meta.username   || ""
+            const avatarUrl  = meta.avatar_url || ""
+            const email      = user.email || ""
+            const displayAs  = username || email.split("@")[0]
+
+            document.getElementById("displayName").textContent  = displayAs
+            document.getElementById("displayEmail").textContent = email
+
+            renderAvatar(document.getElementById("avatarCircle"),  avatarUrl, displayAs)
+            renderAvatar(document.getElementById("avatarPreview"), avatarUrl, displayAs)
+
+            document.getElementById("usernameInput").value = username
+
+            loadWorkouts()
+        }
+
+        function renderAvatar(el, url, nameOrEmail) {
+            if (url) {
+                const img    = document.createElement("img")
+                img.src      = url
+                img.alt      = "Avatar"
+                img.onerror  = () => { el.innerHTML = `<span>${getInitial(nameOrEmail)}</span>` }
+                el.innerHTML = ""
+                el.appendChild(img)
+            } else {
+                el.innerHTML = `<span>${getInitial(nameOrEmail)}</span>`
+            }
+        }
+
+        function getInitial(str) {
+            return (str || "?").charAt(0).toUpperCase()
+        }
+
+        // ─── TABS ────────────────────────────────────────────────────────────────
+
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.onclick = () => {
+                document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"))
+                document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"))
+                btn.classList.add("active")
+                document.getElementById("panel-" + btn.dataset.tab).classList.add("active")
+            }
+        })
+
+        // ─── WORKOUTS ────────────────────────────────────────────────────────────
 
         const workoutList = document.getElementById("workoutList")
 
         async function loadWorkouts() {
-
             workoutList.innerHTML = `
                 <div class="skeleton"></div>
                 <div class="skeleton"></div>
                 <div class="skeleton"></div>
             `
-
             const { data, error } = await sb
                 .from("workouts")
                 .select("*")
                 .order("created_at", { ascending: false })
 
-            if (error) {
-                workoutList.innerHTML = renderError(error.message)
-                return
-            }
-
-            if (!data || data.length === 0) {
-                workoutList.innerHTML = renderEmpty()
-                return
-            }
+            if (error)                    { workoutList.innerHTML = renderError(error.message); return }
+            if (!data || !data.length)    { workoutList.innerHTML = renderEmpty();               return }
 
             workoutList.innerHTML = ""
             data.forEach(w => workoutList.appendChild(buildCard(w)))
-
         }
 
         function buildCard(w) {
+            const totalMin    = (w.walk_minutes + w.run_minutes) * w.cycles
+            const hours       = Math.floor(totalMin / 60)
+            const mins        = totalMin % 60
+            const durationStr = hours > 0 ? `${hours}h ${mins}m` : `${mins} min`
 
-            const totalMin   = (w.walk_minutes + w.run_minutes) * w.cycles
-            const hours      = Math.floor(totalMin / 60)
-            const mins       = totalMin % 60
-            const durationStr = hours > 0
-                ? `${hours}h ${mins}m`
-                : `${mins} min`
+            const date    = new Date(w.created_at)
+            const dateStr = date.toLocaleDateString("es-ES", { day:"numeric", month:"short", year:"numeric" })
+            const timeStr = date.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" })
 
-            const date = new Date(w.created_at)
-            const dateStr = date.toLocaleDateString("es-ES", {
-                day:   "numeric",
-                month: "short",
-                year:  "numeric"
-            })
-            const timeStr = date.toLocaleTimeString("es-ES", {
-                hour:   "2-digit",
-                minute: "2-digit"
-            })
-
-            const card = document.createElement("div")
-            card.className = "workout-card"
-            card.dataset.id = w.id
+            const card       = document.createElement("div")
+            card.className   = "workout-card"
+            card.dataset.id  = w.id
 
             card.innerHTML = `
                 <div class="flex-1 min-w-0">
@@ -437,7 +618,6 @@
             `
 
             card.querySelector(".delete-btn").onclick = () => confirmDelete(w.id, card)
-
             return card
         }
 
@@ -446,14 +626,8 @@
                 <div class="flex flex-col items-center justify-center flex-1 py-20 text-center px-4">
                     <div style="font-size:3rem;margin-bottom:1rem;opacity:0.3">🏃</div>
                     <p class="font-semibold text-gray-300 mb-1">Sin entrenamientos aún</p>
-                    <p class="text-sm text-gray-500">
-                        Cuando completes un entrenamiento aparecerá aquí.
-                    </p>
-                    <a href="app.html"
-                       class="mt-6 px-6 py-3 rounded-full font-bold text-sm text-black"
-                       style="background:#d7ff00">
-                        EMPEZAR A ENTRENAR
-                    </a>
+                    <p class="text-sm text-gray-500">Cuando completes un entrenamiento aparecerá aquí.</p>
+                    <a href="app.html" class="mt-6 px-6 py-3 rounded-full font-bold text-sm text-black" style="background:#d7ff00">EMPEZAR A ENTRENAR</a>
                 </div>
             `
         }
@@ -463,10 +637,7 @@
                 <div class="flex flex-col items-center justify-center flex-1 py-20 text-center px-4">
                     <p class="text-sm text-red-400">Error al cargar entrenamientos</p>
                     <p class="text-xs text-gray-600 mt-1">${msg}</p>
-                    <button onclick="loadWorkouts()"
-                        class="mt-4 px-5 py-2 rounded-full border border-gray-600 text-sm text-gray-300">
-                        Reintentar
-                    </button>
+                    <button onclick="loadWorkouts()" class="mt-4 px-5 py-2 rounded-full border border-gray-600 text-sm text-gray-300">Reintentar</button>
                 </div>
             `
         }
@@ -495,22 +666,14 @@
         }
 
         confirmNo.onclick = closeConfirm
-
-        confirmOverlay.onclick = (e) => {
-            if (e.target === confirmOverlay) closeConfirm()
-        }
+        confirmOverlay.onclick = (e) => { if (e.target === confirmOverlay) closeConfirm() }
 
         confirmYes.onclick = async () => {
-
             if (!pendingDeleteId) return
-
             confirmYes.textContent = "..."
             confirmYes.disabled    = true
 
-            const { error } = await sb
-                .from("workouts")
-                .delete()
-                .eq("id", pendingDeleteId)
+            const { error } = await sb.from("workouts").delete().eq("id", pendingDeleteId)
 
             confirmYes.textContent = "Eliminar"
             confirmYes.disabled    = false
@@ -521,19 +684,132 @@
                 return
             }
 
-            // Animate card out
             if (pendingDeleteCard) {
                 pendingDeleteCard.classList.add("deleting")
                 setTimeout(() => {
                     pendingDeleteCard.remove()
-                    if (workoutList.children.length === 0) {
-                        workoutList.innerHTML = renderEmpty()
-                    }
+                    if (!workoutList.children.length) workoutList.innerHTML = renderEmpty()
                 }, 320)
             }
 
             closeConfirm()
+        }
 
+        // ─── DATOS PERSONALES — FOTO ──────────────────────────────────────────────
+
+        document.getElementById("photoBtn").onclick = () => document.getElementById("photoInput").click()
+
+        document.getElementById("photoInput").onchange = async () => {
+            const file    = document.getElementById("photoInput").files[0]
+            const photoMsg = document.getElementById("photoMsg")
+            if (!file) return
+
+            photoMsg.textContent = "Subiendo foto..."
+            photoMsg.style.color = "#aaa"
+            photoMsg.classList.remove("hidden")
+
+            const { data: { user } } = await sb.auth.getUser()
+            if (!user) return
+
+            const ext  = file.name.split(".").pop()
+            const path = `${user.id}/avatar.${ext}`
+
+            const { error: uploadError } = await sb.storage
+                .from("avatars")
+                .upload(path, file, { upsert: true })
+
+            if (uploadError) {
+                photoMsg.textContent = "Error al subir la foto"
+                photoMsg.style.color = "#f87171"
+                return
+            }
+
+            const { data: { publicUrl } } = sb.storage.from("avatars").getPublicUrl(path)
+            const urlWithBust = publicUrl + "?t=" + Date.now()
+
+            await sb.auth.updateUser({ data: { avatar_url: urlWithBust } })
+
+            const meta    = user.user_metadata || {}
+            const display = meta.username || user.email.split("@")[0]
+
+            renderAvatar(document.getElementById("avatarCircle"),  urlWithBust, display)
+            renderAvatar(document.getElementById("avatarPreview"), urlWithBust, display)
+
+            photoMsg.textContent = "Foto actualizada"
+            photoMsg.style.color = "#4ade80"
+        }
+
+        // ─── DATOS PERSONALES — NOMBRE ────────────────────────────────────────────
+
+        document.getElementById("saveNameBtn").onclick = async () => {
+            const btn      = document.getElementById("saveNameBtn")
+            const nameMsg  = document.getElementById("nameMsg")
+            const username = document.getElementById("usernameInput").value.trim()
+
+            btn.textContent = "Guardando..."
+            btn.disabled    = true
+
+            const { error } = await sb.auth.updateUser({ data: { username } })
+
+            btn.textContent = "Guardar nombre"
+            btn.disabled    = false
+
+            if (error) {
+                nameMsg.textContent = "Error al guardar"
+                nameMsg.style.color = "#f87171"
+            } else {
+                nameMsg.textContent = "Nombre guardado"
+                nameMsg.style.color = "#4ade80"
+                const emailEl = document.getElementById("displayEmail").textContent
+                document.getElementById("displayName").textContent = username || emailEl.split("@")[0]
+            }
+
+            nameMsg.classList.remove("hidden")
+            setTimeout(() => nameMsg.classList.add("hidden"), 3000)
+        }
+
+        // ─── DATOS DE ACCESO — CONTRASEÑA ────────────────────────────────────────
+
+        document.getElementById("changePasswordBtn").onclick = async () => {
+            const btn      = document.getElementById("changePasswordBtn")
+            const msg      = document.getElementById("passwordMsg")
+            const newPwd   = document.getElementById("newPassword").value
+            const confPwd  = document.getElementById("confirmPassword").value
+
+            if (!newPwd || newPwd.length < 6) {
+                msg.textContent = "La contraseña debe tener al menos 6 caracteres"
+                msg.style.color = "#f87171"
+                msg.classList.remove("hidden")
+                return
+            }
+
+            if (newPwd !== confPwd) {
+                msg.textContent = "Las contraseñas no coinciden"
+                msg.style.color = "#f87171"
+                msg.classList.remove("hidden")
+                return
+            }
+
+            btn.textContent = "Guardando..."
+            btn.disabled    = true
+
+            const { error } = await sb.auth.updateUser({ password: newPwd })
+
+            btn.textContent = "Cambiar contraseña"
+            btn.disabled    = false
+
+            if (error) {
+                msg.textContent = translateError(error.message)
+                msg.style.color = "#f87171"
+            } else {
+                msg.textContent = "Contraseña actualizada"
+                msg.style.color = "#4ade80"
+                document.getElementById("newPassword").value     = ""
+                document.getElementById("confirmPassword").value = ""
+            }
+
+            msg.classList.remove("hidden")
+            setTimeout(() => msg.classList.add("hidden"), 4000)
         }
 
     </script>
