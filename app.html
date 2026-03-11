@@ -387,8 +387,30 @@
 
         <div class="w-full max-w-xs mx-4 px-6 py-7 text-center" style="background:#111; border-radius:1.25rem; border:1px solid #333;">
 
-            <p class="text-lg font-bold mb-1">¡Completado!</p>
-            <p id="saveWorkoutSummary" class="text-sm text-gray-400 mb-6"></p>
+            <p class="text-lg font-bold mb-4">¡Completado!</p>
+
+            <!-- workout summary card -->
+            <div id="saveWorkoutCard" style="background:#1a1a1a;border:1px solid #2a2a2a;border-radius:0.875rem;padding:0.9rem 1rem;text-align:left;margin-bottom:1.25rem;">
+                <p id="saveWorkoutDate" class="text-xs mb-3" style="color:#555;"></p>
+                <div class="flex justify-between">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:0.1rem;">
+                        <span id="swWalk" style="font-size:1.15rem;font-weight:700;color:#d7ff00;line-height:1;"></span>
+                        <span style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.05em;">Caminar</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:0.1rem;">
+                        <span id="swRun" style="font-size:1.15rem;font-weight:700;color:#ff6b6b;line-height:1;"></span>
+                        <span style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.05em;">Correr</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:0.1rem;">
+                        <span id="swCycles" style="font-size:1.15rem;font-weight:700;color:#d7ff00;line-height:1;"></span>
+                        <span style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.05em;">Series</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:0.1rem;">
+                        <span id="swTotal" style="font-size:1.05rem;font-weight:700;color:#d7ff00;line-height:1;"></span>
+                        <span style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.05em;">Total</span>
+                    </div>
+                </div>
+            </div>
 
             <div class="flex gap-3">
                 <button id="saveNo"  class="flex-1 border border-gray-600 text-gray-300 py-3 rounded-full font-bold text-sm">Descartar</button>
@@ -886,9 +908,21 @@
         const saveMsg     = document.getElementById("saveMsg")
 
         function showSaveDialog(walkMin, runMin, numCycles) {
-            const total = Math.round((walkMin + runMin) * numCycles)
-            document.getElementById("saveWorkoutSummary").textContent =
-                `${walkMin}' caminar · ${runMin}' correr · ${numCycles} series · ${total} min`
+            const totalMin = Math.round((walkMin + runMin) * numCycles)
+            const hours    = Math.floor(totalMin / 60)
+            const mins     = totalMin % 60
+            const durStr   = hours > 0 ? `${hours}h ${mins}m` : `${mins} min`
+
+            const now     = new Date()
+            const dateStr = now.toLocaleDateString("es-ES", { day:"numeric", month:"short", year:"numeric" })
+            const timeStr = now.toLocaleTimeString("es-ES", { hour:"2-digit", minute:"2-digit" })
+
+            document.getElementById("saveWorkoutDate").textContent = `${dateStr} · ${timeStr}`
+            document.getElementById("swWalk").innerHTML    = `${Math.round(walkMin)}<span style="font-size:0.7rem;color:#999;font-weight:400">m</span>`
+            document.getElementById("swRun").innerHTML     = `${Math.round(runMin)}<span style="font-size:0.7rem;color:#999;font-weight:400">m</span>`
+            document.getElementById("swCycles").textContent = Math.round(numCycles)
+            document.getElementById("swTotal").textContent  = durStr
+
             saveOverlay.dataset.walk   = walkMin
             saveOverlay.dataset.run    = runMin
             saveOverlay.dataset.cycles = numCycles
