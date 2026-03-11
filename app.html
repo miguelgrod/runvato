@@ -363,6 +363,7 @@ let totalInterval=phase==="walk"?walkTime:runTime
 let percent=(totalInterval-remaining)/totalInterval
 let offset=circumference-(percent*circumference)
 progressRing.style.strokeDashoffset=offset
+progressRing.style.stroke=phase==="run"?"#ff6b6b":"#d7ff00"
 }
 
 function startTraining(){
@@ -488,6 +489,7 @@ timer=null
 timerLabel.textContent="00:00"
 progressTotal.style.width="0%"
 progressRing.style.strokeDashoffset=circumference
+progressRing.style.stroke="#d7ff00"
 cycleLabel.textContent="LISTO"
 
 playBtn.textContent="EMPEZAR"
