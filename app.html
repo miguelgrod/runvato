@@ -225,10 +225,8 @@
 
             <div class="flex items-center gap-4">
 
-                <a href="area-usuario.html" title="Área de usuario" class="hover:opacity-70 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
-                        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                    </svg>
+                <a href="area-usuario.html" title="Área de usuario" id="userAvatarLink" class="hover:opacity-70 transition-opacity">
+                    <div id="userAvatarHeader" style="width:32px;height:32px;border-radius:50%;overflow:hidden;background:#1a1a1a;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.85rem;color:#d7ff00;flex-shrink:0;"></div>
                 </a>
 
                 <div id="musicToggle" class="cursor-pointer">
@@ -537,10 +535,28 @@
 
         // ─── SESSION ─────────────────────────────────────────────────────────────
 
+        function renderHeaderAvatar(url, nameOrEmail) {
+            const el = document.getElementById("userAvatarHeader")
+            el.innerHTML = ""
+            if (url) {
+                const img    = document.createElement("img")
+                img.src      = url
+                img.alt      = "Avatar"
+                img.style.cssText = "width:100%;height:100%;object-fit:cover;"
+                img.onerror  = () => { el.innerHTML = `<span>${(nameOrEmail || "?")[0].toUpperCase()}</span>` }
+                el.appendChild(img)
+            } else {
+                el.innerHTML = `<span>${(nameOrEmail || "?")[0].toUpperCase()}</span>`
+            }
+        }
+
         sb.auth.onAuthStateChange((_event, session) => {
             if (session) {
                 authModal.style.display = "none"
                 loadSettings()
+                const meta = session.user.user_metadata || {}
+                const name = meta.username || session.user.email || "?"
+                renderHeaderAvatar(meta.avatar_url || "", name)
             } else {
                 authModal.style.display = "flex"
             }
