@@ -215,12 +215,11 @@
 
             <div class="flex items-center gap-4">
 
-                <button id="logoutBtn" title="Cerrar sesión" class="opacity-50 hover:opacity-100 transition-opacity">
+                <a href="area-usuario.html" title="Área de usuario" class="opacity-50 hover:opacity-100 transition-opacity">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="white" viewBox="0 0 24 24">
-                        <path d="M16 13v-2H7V8l-5 4 5 4v-3z"/>
-                        <path d="M20 3h-9a2 2 0 0 0-2 2v4h2V5h9v14h-9v-4H9v4a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2z"/>
+                        <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
                     </svg>
-                </button>
+                </a>
 
                 <div id="musicToggle" class="cursor-pointer">
 
@@ -391,7 +390,6 @@
         const authToggleText  = document.getElementById("authToggleText")
         const authSubtitle    = document.getElementById("authSubtitle")
         const authMessage     = document.getElementById("authMessage")
-        const logoutBtn       = document.getElementById("logoutBtn")
         const passwordTooltip = document.getElementById("passwordTooltip")
         const tooltipTitle    = document.getElementById("tooltipTitle")
         const reqLength       = document.getElementById("req-length")
@@ -517,10 +515,6 @@
                 showMessage("✓ Registro completado — revisa tu email para confirmar la cuenta", "success")
                 resetInputStates()
             }
-        }
-
-        logoutBtn.onclick = async () => {
-            await sb.auth.signOut()
         }
 
         function translateError(msg) {
