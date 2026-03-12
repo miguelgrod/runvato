@@ -801,7 +801,7 @@
             } else {
                 const tHalf = msLeft - Math.floor(runTime / 2) * 1000
                 if (tHalf > 0) scheduledAlerts.push(setTimeout(() => playAlert('halfRun'), tHalf))
-                if (cycle < cycles) scheduledAlerts.push(setTimeout(() => playAlert('finishRun'), msLeft))
+                // finishRun se dispara desde tick() para evitar race condition con clearAlerts
             }
         }
 
@@ -837,12 +837,21 @@
 
         function tick() {
             let phaseChanged = false
+            const prevPhase = phase
+            const prevCycle = cycle
             while (phaseElapsedMs() >= phaseDurationMs()) {
                 advancePhase(true)
                 if (!timer) return
                 phaseChanged = true
             }
-            if (phaseChanged) scheduleAlerts()
+            if (phaseChanged) {
+                // finishRun solo en transición real run→walk (1 ciclo): evita disparar
+                // múltiples sonidos en modo background donde se recuperan varias fases
+                if (prevPhase === "run" && phase === "walk" && cycle === prevCycle + 1) {
+                    playAlert('finishRun')
+                }
+                scheduleAlerts()
+            }
 
             const remaining    = phaseRemainingSec()
             const elapsed      = trainingElapsedMs() / 1000
