@@ -705,8 +705,6 @@
             }
         })()
 
-        let activeAlerts = 0
-
         function playAlert(key) {
             const buf = audioBuffers[key]
             if (!buf) return
@@ -714,12 +712,9 @@
             src.buffer = buf
             src.connect(audioCtx.destination)
             src.start()
-            activeAlerts++
-            if (activeAlerts === 1) music.volume *= 0.8
-            src.onended = () => {
-                activeAlerts = Math.max(0, activeAlerts - 1)
-                if (activeAlerts === 0) music.volume = Math.min(1, music.volume / 0.8)
-            }
+            const volBefore = music.volume
+            music.volume *= 0.8
+            src.onended = () => { music.volume = volBefore }
         }
 
         function stopAllAudio() {
