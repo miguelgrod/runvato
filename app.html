@@ -876,7 +876,8 @@
             }
             // Unlock all alert audio for iOS Safari (must happen synchronously in user gesture)
             ;[warn10, warn3, halfRun, finishRun, completeSound].forEach(a => {
-                a.play().then(() => { a.pause(); a.currentTime = 0 }).catch(() => {})
+                a.volume = 0
+                a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 1 }).catch(() => { a.volume = 1 })
             })
             playBtn.textContent = "DETENER"
             playBtn.classList.remove("bg-[#d7ff00]")
