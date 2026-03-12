@@ -147,10 +147,10 @@
 
         .workout-card:hover { border-color: #333; }
 
-        .workout-card.deleting {
+        .workout-card.removing {
             opacity: 0;
-            transform: translateX(30px);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transform: translateX(24px);
+            overflow: hidden;
         }
 
         .stat {
@@ -602,9 +602,10 @@
 
         // ─── WORKOUTS ────────────────────────────────────────────────────────────
 
-        const workoutList   = document.getElementById("workoutList")
+        const workoutList    = document.getElementById("workoutList")
         const chartContainer = document.getElementById("chartContainer")
-        let evolutionChart  = null
+        let evolutionChart   = null
+        let allWorkouts      = []
 
         async function loadWorkouts() {
             workoutList.innerHTML = `
@@ -619,10 +620,25 @@
 
             if (error) { chartContainer.classList.add("hidden"); workoutList.innerHTML = renderError(error.message); return }
 
-            renderChart(data || [])
-            if (!data || !data.length) { workoutList.innerHTML = renderEmpty(); return }
+            allWorkouts = data || []
+            renderChart(allWorkouts)
+            if (!allWorkouts.length) { workoutList.innerHTML = renderEmpty(); return }
             workoutList.innerHTML = ""
-            data.forEach(w => workoutList.appendChild(buildCard(w)))
+            allWorkouts.forEach(w => workoutList.appendChild(buildCard(w)))
+        }
+
+        function removeCardAnimated(card, id, onDone) {
+            const h = card.offsetHeight
+            card.style.height     = h + "px"
+            card.style.overflow   = "hidden"
+            card.style.transition = "height 0.32s ease, opacity 0.25s ease, transform 0.25s ease, margin-bottom 0.32s ease, padding 0.32s ease"
+            card.offsetHeight // force reflow
+            card.classList.add("removing")
+            card.style.height        = "0"
+            card.style.marginBottom  = "0"
+            card.style.paddingTop    = "0"
+            card.style.paddingBottom = "0"
+            setTimeout(onDone, 340)
         }
 
         function renderChart(data) {
@@ -869,15 +885,16 @@
                 return
             }
 
-            if (pendingDeleteCard) {
-                pendingDeleteCard.classList.add("deleting")
-                setTimeout(() => {
-                    pendingDeleteCard.remove()
-                    loadWorkouts()
-                }, 320)
-            }
-
+            const card = pendingDeleteCard
+            const id   = pendingDeleteId
             closeConfirm()
+
+            removeCardAnimated(card, id, () => {
+                card.remove()
+                allWorkouts = allWorkouts.filter(w => w.id !== id)
+                renderChart(allWorkouts)
+                if (!allWorkouts.length) workoutList.innerHTML = renderEmpty()
+            })
         }
 
         // ─── DATOS PERSONALES — FOTO ──────────────────────────────────────────────
