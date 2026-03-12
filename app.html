@@ -690,6 +690,7 @@
         runSlider.oninput  = () => { runValue.textContent  = Math.round(runSlider.value);  scheduleSave() }
         cycleSlider.oninput = () => { cycleValue.textContent = Math.round(cycleSlider.value); scheduleSave() }
 
+        let audioUnlocked = false
         let timer = null
         let phase = "walk"
         let cycle = 1
@@ -862,11 +863,14 @@
                 resetTraining()
                 return
             }
-            // Unlock alert audio elements on iOS (same elements played later via setTimeout)
-            ;[warn10, warn3, halfRun, finishRun, completeSound].forEach(a => {
-                a.volume = 0
-                a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 1 }).catch(() => { a.volume = 1 })
-            })
+            // Unlock alert audio on iOS — only needed once per session
+            if (!audioUnlocked) {
+                audioUnlocked = true
+                ;[warn10, warn3, halfRun, finishRun, completeSound].forEach(a => {
+                    a.volume = 0
+                    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 1 }).catch(() => { a.volume = 1 })
+                })
+            }
             playBtn.textContent = "DETENER"
             playBtn.classList.remove("bg-[#d7ff00]")
             playBtn.classList.add("bg-red-500")
