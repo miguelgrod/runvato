@@ -340,7 +340,9 @@
             <!-- GRÁFICO EVOLUCIÓN -->
             <div id="chartContainer" class="hidden mb-4" style="background:#111;border:1px solid #222;border-radius:1rem;padding:1rem 1rem 0.75rem;">
                 <p style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">Evolución · Tiempo corriendo</p>
-                <canvas id="evolutionChart" height="160"></canvas>
+                <div id="chartScrollWrapper" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;">
+                    <canvas id="evolutionChart" height="160"></canvas>
+                </div>
                 <div class="flex gap-2 mt-2 justify-center pb-1">
                     <div class="flex items-center gap-1.5">
                         <div style="width:8px;height:8px;border-radius:50%;background:#ff6b6b;flex-shrink:0"></div>
@@ -615,8 +617,19 @@
             chartContainer.classList.remove("hidden")
             if (evolutionChart) evolutionChart.destroy()
 
-            const canvas = document.getElementById("evolutionChart")
-            const ctx    = canvas.getContext("2d")
+            const canvas        = document.getElementById("evolutionChart")
+            const scrollWrapper = document.getElementById("chartScrollWrapper")
+            const totalPoints   = sorted.length
+            const wrapperW      = scrollWrapper.clientWidth || 360
+            const colW          = totalPoints <= 6 ? wrapperW / totalPoints : 60
+            const chartW        = Math.round(totalPoints * colW)
+
+            canvas.width        = chartW
+            canvas.height       = 160
+            canvas.style.width  = chartW + "px"
+            canvas.style.height = "160px"
+
+            const ctx = canvas.getContext("2d")
 
             const runGrad = ctx.createLinearGradient(0, 0, 0, 180)
             runGrad.addColorStop(0, "rgba(255,107,107,0.25)")
@@ -670,7 +683,8 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
+                    maintainAspectRatio: false,
                     interaction: { mode: "index", intersect: false },
                     plugins: {
                         legend: { display: false },
@@ -703,6 +717,9 @@
                     }
                 }
             })
+
+            // Scroll to the right to show the latest workouts
+            requestAnimationFrame(() => { scrollWrapper.scrollLeft = scrollWrapper.scrollWidth })
         }
 
         function buildCard(w) {
