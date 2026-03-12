@@ -705,16 +705,21 @@
         cycleSlider.oninput = () => { cycleValue.textContent = Math.round(cycleSlider.value); scheduleSave() }
 
         let timer = null
-        let remaining = 0
         let phase = "walk"
         let cycle = 1
 
         let walkTime = 0
         let runTime  = 0
         let cycles   = 0
-
         let totalTime = 0
-        let elapsed   = 0
+
+        // Epoch-based timing — fuente de verdad para funcionamiento en segundo plano
+        let phaseStartEpoch    = 0   // cuándo empezó la fase actual (ajustado en pausa)
+        let trainingStartEpoch = 0   // cuándo empezó el entrenamiento (ajustado en pausa)
+        let pausedEpoch        = 0   // distinto de 0 mientras está pausado
+
+        let scheduledAlerts = []
+        let wakeLock = null
 
         const circumference = 628
 
@@ -724,163 +729,217 @@
             return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0")
         }
 
-        function updateRing() {
-            let totalInterval = phase === "walk" ? walkTime : runTime
-            let percent = (totalInterval - remaining) / totalInterval
-            let offset  = circumference - (percent * circumference)
-            progressRing.style.strokeDashoffset = offset
-            progressRing.style.stroke = phase === "run" ? "#ff6b6b" : "#d7ff00"
+        // ─── Wake Lock ────────────────────────────────────────────────────────────
+
+        async function requestWakeLock() {
+            if (!('wakeLock' in navigator)) return
+            try {
+                wakeLock = await navigator.wakeLock.request('screen')
+                wakeLock.addEventListener('release', () => { wakeLock = null })
+            } catch (e) {}
         }
 
-        function startTraining() {
+        function releaseWakeLock() {
+            if (wakeLock) { wakeLock.release(); wakeLock = null }
+        }
 
+        // ─── Helpers de tiempo ────────────────────────────────────────────────────
+
+        function phaseDurationMs() {
+            return (phase === "walk" ? walkTime : runTime) * 1000
+        }
+
+        function phaseElapsedMs() {
+            return (pausedEpoch || Date.now()) - phaseStartEpoch
+        }
+
+        function trainingElapsedMs() {
+            return (pausedEpoch || Date.now()) - trainingStartEpoch
+        }
+
+        function phaseRemainingSec() {
+            return Math.max(0, Math.ceil((phaseDurationMs() - phaseElapsedMs()) / 1000))
+        }
+
+        // ─── Alertas de sonido programadas con setTimeout ─────────────────────────
+
+        function clearAlerts() {
+            scheduledAlerts.forEach(id => clearTimeout(id))
+            scheduledAlerts = []
+        }
+
+        function scheduleAlerts() {
+            clearAlerts()
+            const msLeft = phaseDurationMs() - phaseElapsedMs()
+            if (phase === "walk") {
+                const t10 = msLeft - 13000
+                const t3  = msLeft - 3000
+                if (t10 > 0) scheduledAlerts.push(setTimeout(() => playAlert(warn10), t10))
+                if (t3  > 0) scheduledAlerts.push(setTimeout(() => playAlert(warn3), t3))
+            } else {
+                const tHalf = msLeft - Math.floor(runTime / 2) * 1000
+                if (tHalf > 0) scheduledAlerts.push(setTimeout(() => playAlert(halfRun), tHalf))
+            }
+        }
+
+        // ─── Avance de fase ───────────────────────────────────────────────────────
+
+        function advancePhase(skipAudio = false) {
+            const nextStart = phaseStartEpoch + phaseDurationMs()
+
+            if (phase === "walk") {
+                phase = "run"
+                phaseStartEpoch = nextStart
+            } else {
+                if (cycle >= cycles) {
+                    clearInterval(timer)
+                    timer = null
+                    clearAlerts()
+                    releaseWakeLock()
+                    completeSound.currentTime = 0
+                    completeSound.play().catch(() => {})
+                    const doneWalk = walkTime / 60, doneRun = runTime / 60, doneCycles = cycles
+                    resetUI()
+                    showSaveDialog(doneWalk, doneRun, doneCycles)
+                    return
+                }
+                if (!skipAudio) playAlert(finishRun)
+                cycle++
+                phase = "walk"
+                phaseStartEpoch = nextStart
+            }
+        }
+
+        // ─── Tick (actualiza UI, recupera fases perdidas en background) ───────────
+
+        function tick() {
+            let phaseChanged = false
+            while (phaseElapsedMs() >= phaseDurationMs()) {
+                advancePhase(true)
+                if (!timer) return
+                phaseChanged = true
+            }
+            if (phaseChanged) scheduleAlerts()
+
+            const remaining    = phaseRemainingSec()
+            const elapsed      = trainingElapsedMs() / 1000
+            const percent      = Math.min(100, (elapsed / totalTime) * 100)
+            const totalInterval = phase === "walk" ? walkTime : runTime
+            const phasePct     = 1 - remaining / totalInterval
+
+            timerLabel.textContent = formatTime(remaining)
+            progressTotal.style.width = percent + "%"
+            progressRing.style.strokeDashoffset = circumference * (1 - phasePct)
+            progressRing.style.stroke = phase === "run" ? "#ff6b6b" : "#d7ff00"
+            cycleLabel.textContent = "Serie " + cycle + " / " + cycles
+        }
+
+        // ─── Control del entrenamiento ────────────────────────────────────────────
+
+        function startTraining() {
             if (timer) return
 
-            walkTime = Math.round(walkSlider.value) * 60
-            runTime  = Math.round(runSlider.value) * 60
-            cycles   = Math.round(cycleSlider.value)
-
+            walkTime  = Math.round(walkSlider.value) * 60
+            runTime   = Math.round(runSlider.value) * 60
+            cycles    = Math.round(cycleSlider.value)
             totalTime = (walkTime + runTime) * cycles
 
-            remaining = walkTime
-            phase     = "walk"
-            cycle     = 1
-            elapsed   = 0
+            phase = "walk"
+            cycle = 1
+            const now = Date.now()
+            trainingStartEpoch = now
+            phaseStartEpoch    = now
+            pausedEpoch        = 0
 
             playAlert(playSound)
-
             document.body.classList.add("running")
 
             music.volume = 0.5
             music.currentTime = 0
             music.play().catch(() => {})
 
+            scheduleAlerts()
+            requestWakeLock()
+
             timer = setInterval(tick, 1000)
 
             pauseBtn.disabled = false
             pauseBtn.classList.remove("border-gray-400", "text-gray-400", "cursor-not-allowed")
             pauseBtn.classList.add("border-white", "text-white")
-
-        }
-
-        function tick() {
-
-            remaining--
-            elapsed++
-
-            timerLabel.textContent = formatTime(remaining)
-
-            updateRing()
-
-            let percent = (elapsed / totalTime) * 100
-            progressTotal.style.width = percent + "%"
-
-            if (phase === "walk") {
-                if (remaining === 13) playAlert(warn10)
-                if (remaining === 3)  playAlert(warn3)
-            }
-
-            if (phase === "run") {
-                if (remaining === Math.floor(runTime / 2))
-                    playAlert(halfRun)
-            }
-
-            if (remaining <= 0) {
-
-                if (phase === "walk") {
-                    phase     = "run"
-                    remaining = runTime
-                } else {
-
-                    if (cycle >= cycles) {
-                        completeSound.currentTime = 0
-                        completeSound.play().catch(() => {})
-                        const doneWalk   = walkTime / 60
-                        const doneRun    = runTime / 60
-                        const doneCycles = cycles
-                        resetTraining(true)
-                        showSaveDialog(doneWalk, doneRun, doneCycles)
-                        return
-                    }
-
-                    playAlert(finishRun)
-
-                    cycle++
-                    phase     = "walk"
-                    remaining = walkTime
-
-                }
-
-            }
-
-            cycleLabel.textContent = "Serie " + cycle + " / " + cycles
-
         }
 
         playBtn.onclick = () => {
-
             if (playBtn.textContent === "DETENER") {
                 resetTraining()
                 return
             }
-
             playBtn.textContent = "DETENER"
             playBtn.classList.remove("bg-[#d7ff00]")
             playBtn.classList.add("bg-red-500")
-
             startTraining()
-
         }
 
         pauseBtn.onclick = () => {
-
-            if (timer) {
-
+            if (pausedEpoch) {
+                // Reanudar — desplazar épocas hacia adelante para excluir el tiempo en pausa
+                const pauseDuration = Date.now() - pausedEpoch
+                phaseStartEpoch    += pauseDuration
+                trainingStartEpoch += pauseDuration
+                pausedEpoch = 0
+                scheduleAlerts()
+                timer = setInterval(tick, 1000)
+                music.play().catch(() => {})
+                pauseBtn.textContent = "PAUSA"
+            } else {
+                // Pausar
                 clearInterval(timer)
                 timer = null
-                pauseBtn.textContent = "REANUDAR"
+                clearAlerts()
+                pausedEpoch = Date.now()
                 music.pause()
-
-            } else {
-
-                timer = setInterval(tick, 1000)
-                pauseBtn.textContent = "PAUSA"
-                music.play().catch(() => {})
-
+                pauseBtn.textContent = "REANUDAR"
             }
-
         }
 
-        function resetTraining(keepAudio = false) {
-
-            clearInterval(timer)
-            timer = null
-
+        function resetUI() {
             timerLabel.textContent = "00:00"
             progressTotal.style.width = "0%"
             progressRing.style.strokeDashoffset = circumference
             progressRing.style.stroke = "#d7ff00"
             cycleLabel.textContent = "LISTO"
-
             playBtn.textContent = "EMPEZAR"
             playBtn.classList.remove("bg-red-500")
             playBtn.classList.add("bg-[#d7ff00]")
-
             pauseBtn.disabled = true
             pauseBtn.textContent = "PAUSA"
             pauseBtn.classList.remove("border-white", "text-white")
             pauseBtn.classList.add("border-gray-400", "text-gray-400", "cursor-not-allowed")
-
             document.body.classList.remove("running")
+        }
 
+        function resetTraining(keepAudio = false) {
+            clearInterval(timer)
+            timer = null
+            clearAlerts()
+            pausedEpoch = 0
+            releaseWakeLock()
+            resetUI()
             if (keepAudio) {
                 music.pause()
                 music.currentTime = 0
             } else {
                 stopAllAudio()
             }
-
         }
+
+        // ─── Visibilidad (volver al primer plano tras background) ─────────────────
+
+        document.addEventListener('visibilitychange', async () => {
+            if (document.visibilityState !== 'visible' || !timer || pausedEpoch) return
+            tick()  // recupera fases perdidas y actualiza UI
+            if (music.paused) music.play().catch(() => {})
+            if (!wakeLock) await requestWakeLock()
+        })
 
         const iconSoundOn  = document.getElementById("iconSoundOn")
         const iconSoundOff = document.getElementById("iconSoundOff")
@@ -894,12 +953,12 @@
         // ─── DEBUG ────────────────────────────────────────────────────────────────
 
         window.debugFinish = () => {
-            if (!timer) { console.warn("No hay entrenamiento activo"); return }
-            clearInterval(timer)
+            if (!timer && !pausedEpoch) { console.warn("No hay entrenamiento activo"); return }
             cycle = cycles
             phase = "run"
-            remaining = 0
-            timer = setInterval(tick, 1000)
+            phaseStartEpoch = Date.now() - (runTime * 1000 - 1000)
+            clearAlerts()
+            scheduleAlerts()
         }
 
         // ─── SAVE WORKOUT DIALOG ──────────────────────────────────────────────────
