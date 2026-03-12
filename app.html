@@ -783,6 +783,8 @@
                     timer = null
                     clearAlerts()
                     releaseWakeLock()
+                    music.pause()
+                    music.currentTime = 0
                     completeSound.currentTime = 0
                     completeSound.play().catch(() => {})
                     const doneWalk = walkTime / 60, doneRun = runTime / 60, doneCycles = cycles
