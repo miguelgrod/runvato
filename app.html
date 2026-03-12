@@ -425,12 +425,6 @@
 
     <!-- AUDIOS -->
 
-    <audio id="playSound" src="audio/play.mp3"></audio>
-    <audio id="warn10" src="audio/warn10.mp3"></audio>
-    <audio id="warn3" src="audio/warn3.mp3"></audio>
-    <audio id="halfRun" src="audio/halfRun.mp3"></audio>
-    <audio id="finishRun" src="audio/finishRun.mp3"></audio>
-    <audio id="completeSound" src="audio/trainingComplete.mp3"></audio>
     <audio id="music" src="audio/music.mp3" loop></audio>
 
     <script>
@@ -666,31 +660,51 @@
         const playBtn  = document.getElementById("playBtn")
         const pauseBtn = document.getElementById("pauseBtn")
 
-        const playSound    = document.getElementById("playSound")
-        const warn10       = document.getElementById("warn10")
-        const warn3        = document.getElementById("warn3")
-        const halfRun      = document.getElementById("halfRun")
-        const finishRun    = document.getElementById("finishRun")
-        const completeSound = document.getElementById("completeSound")
-        const music        = document.getElementById("music")
+        const music = document.getElementById("music")
 
-        function stopAllAudio() {
-            document.querySelectorAll("audio").forEach(a => {
-                a.pause()
-                a.currentTime = 0
-            })
+        // ─── Web Audio API ────────────────────────────────────────────────────────
+        // Creamos el contexto al cargar (suspendido en iOS hasta el primer gesto).
+        // Fetch + decode ocurren en paralelo sin necesidad de gesto de usuario.
+        // Cuando el usuario pulsa EMPEZAR se hace resume() y todo funciona.
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        const audioBuffers = {}
+
+        ;(async () => {
+            const files = {
+                play:      'audio/play.mp3',
+                warn10:    'audio/warn10.mp3',
+                warn3:     'audio/warn3.mp3',
+                halfRun:   'audio/halfRun.mp3',
+                finishRun: 'audio/finishRun.mp3',
+                complete:  'audio/trainingComplete.mp3'
+            }
+            for (const [key, url] of Object.entries(files)) {
+                try {
+                    const raw = await fetch(url).then(r => r.arrayBuffer())
+                    audioBuffers[key] = await audioCtx.decodeAudioData(raw)
+                } catch (e) {}
+            }
+        })()
+
+        function playAlert(key) {
+            const buf = audioBuffers[key]
+            if (!buf) return
+            const src = audioCtx.createBufferSource()
+            src.buffer = buf
+            src.connect(audioCtx.destination)
+            src.start()
         }
 
-        function playAlert(sound) {
-            sound.currentTime = 0
-            sound.play().catch(() => {})
+        function stopAllAudio() {
+            music.pause()
+            music.currentTime = 0
         }
 
         walkSlider.oninput = () => { walkValue.textContent = Math.round(walkSlider.value); scheduleSave() }
         runSlider.oninput  = () => { runValue.textContent  = Math.round(runSlider.value);  scheduleSave() }
         cycleSlider.oninput = () => { cycleValue.textContent = Math.round(cycleSlider.value); scheduleSave() }
 
-        let audioUnlocked = false
         let timer = null
         let phase = "walk"
         let cycle = 1
@@ -761,12 +775,12 @@
             if (phase === "walk") {
                 const t10 = msLeft - 13000
                 const t3  = msLeft - 3000
-                if (t10 > 0) scheduledAlerts.push(setTimeout(() => playAlert(warn10), t10))
-                if (t3  > 0) scheduledAlerts.push(setTimeout(() => playAlert(warn3), t3))
+                if (t10 > 0) scheduledAlerts.push(setTimeout(() => playAlert('warn10'), t10))
+                if (t3  > 0) scheduledAlerts.push(setTimeout(() => playAlert('warn3'), t3))
             } else {
                 const tHalf = msLeft - Math.floor(runTime / 2) * 1000
-                if (tHalf > 0) scheduledAlerts.push(setTimeout(() => playAlert(halfRun), tHalf))
-                if (cycle < cycles) scheduledAlerts.push(setTimeout(() => playAlert(finishRun), msLeft))
+                if (tHalf > 0) scheduledAlerts.push(setTimeout(() => playAlert('halfRun'), tHalf))
+                if (cycle < cycles) scheduledAlerts.push(setTimeout(() => playAlert('finishRun'), msLeft))
             }
         }
 
@@ -786,8 +800,7 @@
                     releaseWakeLock()
                     music.pause()
                     music.currentTime = 0
-                    completeSound.currentTime = 0
-                    completeSound.play().catch(() => {})
+                    playAlert('complete')
                     const doneWalk = walkTime / 60, doneRun = runTime / 60, doneCycles = cycles
                     resetUI()
                     showSaveDialog(doneWalk, doneRun, doneCycles)
@@ -840,7 +853,7 @@
             phaseStartEpoch    = now
             pausedEpoch        = 0
 
-            playAlert(playSound)
+            playAlert('play')
             document.body.classList.add("running")
 
             music.volume = 0.5
@@ -863,14 +876,8 @@
                 resetTraining()
                 return
             }
-            // Unlock alert audio on iOS — only needed once per session
-            if (!audioUnlocked) {
-                audioUnlocked = true
-                ;[warn10, warn3, halfRun, finishRun, completeSound].forEach(a => {
-                    a.volume = 0
-                    a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 1 }).catch(() => { a.volume = 1 })
-                })
-            }
+            // Desbloquear AudioContext en iOS (debe llamarse desde gesto de usuario)
+            if (audioCtx.state === 'suspended') audioCtx.resume()
             playBtn.textContent = "DETENER"
             playBtn.classList.remove("bg-[#d7ff00]")
             playBtn.classList.add("bg-red-500")
@@ -934,6 +941,7 @@
 
         document.addEventListener('visibilitychange', async () => {
             if (document.visibilityState !== 'visible' || !timer || pausedEpoch) return
+            if (audioCtx.state === 'suspended') audioCtx.resume()
             tick()  // recupera fases perdidas y actualiza UI
             if (music.paused) music.play().catch(() => {})
             if (!wakeLock) await requestWakeLock()
