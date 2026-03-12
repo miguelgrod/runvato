@@ -779,6 +779,7 @@
             } else {
                 const tHalf = msLeft - Math.floor(runTime / 2) * 1000
                 if (tHalf > 0) scheduledAlerts.push(setTimeout(() => playAlert(halfRun), tHalf))
+                if (cycle < cycles) scheduledAlerts.push(setTimeout(() => playAlert(finishRun), msLeft))
             }
         }
 
@@ -803,7 +804,6 @@
                     showSaveDialog(doneWalk, doneRun, doneCycles)
                     return
                 }
-                if (!skipAudio) playAlert(finishRun)
                 cycle++
                 phase = "walk"
                 phaseStartEpoch = nextStart
@@ -870,6 +870,7 @@
 
         playBtn.onclick = () => {
             if (playBtn.textContent === "DETENER") {
+                if (!confirm("¿Estás seguro de que quieres detener el entrenamiento?")) return
                 resetTraining()
                 return
             }
