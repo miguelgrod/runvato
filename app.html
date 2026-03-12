@@ -674,30 +674,16 @@
         const completeSound = document.getElementById("completeSound")
         const music        = document.getElementById("music")
 
-        const activeClones = []
-
         function stopAllAudio() {
             document.querySelectorAll("audio").forEach(a => {
                 a.pause()
                 a.currentTime = 0
             })
-            activeClones.forEach(a => {
-                a.pause()
-                a.currentTime = 0
-            })
-            activeClones.length = 0
         }
 
         function playAlert(sound) {
-            const s = sound.cloneNode(true)
-            s.currentTime = 0
-            s.volume = sound.volume
-            activeClones.push(s)
-            s.onended = () => {
-                const i = activeClones.indexOf(s)
-                if (i !== -1) activeClones.splice(i, 1)
-            }
-            s.play().catch(() => {})
+            sound.currentTime = 0
+            sound.play().catch(() => {})
         }
 
         walkSlider.oninput = () => { walkValue.textContent = Math.round(walkSlider.value); scheduleSave() }
@@ -874,7 +860,7 @@
                 resetTraining()
                 return
             }
-            // Unlock all alert audio for iOS Safari (must happen synchronously in user gesture)
+            // Unlock alert audio elements on iOS (same elements played later via setTimeout)
             ;[warn10, warn3, halfRun, finishRun, completeSound].forEach(a => {
                 a.volume = 0
                 a.play().then(() => { a.pause(); a.currentTime = 0; a.volume = 1 }).catch(() => { a.volume = 1 })
