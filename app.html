@@ -874,6 +874,10 @@
                 resetTraining()
                 return
             }
+            // Unlock all alert audio for iOS Safari (must happen synchronously in user gesture)
+            ;[warn10, warn3, halfRun, finishRun, completeSound].forEach(a => {
+                a.play().then(() => { a.pause(); a.currentTime = 0 }).catch(() => {})
+            })
             playBtn.textContent = "DETENER"
             playBtn.classList.remove("bg-[#d7ff00]")
             playBtn.classList.add("bg-red-500")
