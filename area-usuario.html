@@ -10,6 +10,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
@@ -336,6 +337,30 @@
 
         <div id="panel-historial" class="tab-panel active">
 
+            <!-- GRÁFICO EVOLUCIÓN -->
+            <div id="chartContainer" class="hidden mb-4" style="background:#111;border:1px solid #222;border-radius:1rem;padding:1rem 1rem 0.75rem;">
+                <p style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">Evolución</p>
+                <canvas id="evolutionChart" height="170"></canvas>
+                <div class="flex gap-4 mt-2 justify-center pb-1 flex-wrap">
+                    <div class="flex items-center gap-1.5">
+                        <div style="width:8px;height:8px;border-radius:50%;background:#d7ff00;flex-shrink:0"></div>
+                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Caminar</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div style="width:8px;height:8px;border-radius:50%;background:#ff6b6b;flex-shrink:0"></div>
+                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Correr</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div style="width:8px;height:8px;border-radius:50%;background:#60a5fa;flex-shrink:0"></div>
+                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Series</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <div style="width:8px;height:8px;border-radius:50%;background:#fb923c;flex-shrink:0"></div>
+                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Total</span>
+                    </div>
+                </div>
+            </div>
+
             <div id="workoutList" class="flex flex-col gap-3 flex-1">
                 <div class="skeleton"></div>
                 <div class="skeleton"></div>
@@ -568,7 +593,9 @@
 
         // ─── WORKOUTS ────────────────────────────────────────────────────────────
 
-        const workoutList = document.getElementById("workoutList")
+        const workoutList   = document.getElementById("workoutList")
+        const chartContainer = document.getElementById("chartContainer")
+        let evolutionChart  = null
 
         async function loadWorkouts() {
             workoutList.innerHTML = `
@@ -581,11 +608,180 @@
                 .select("*")
                 .order("created_at", { ascending: false })
 
-            if (error)                    { workoutList.innerHTML = renderError(error.message); return }
-            if (!data || !data.length)    { workoutList.innerHTML = renderEmpty();               return }
+            if (error)                    { chartContainer.classList.add("hidden"); workoutList.innerHTML = renderError(error.message); return }
+            if (!data || !data.length)    { chartContainer.classList.add("hidden"); workoutList.innerHTML = renderEmpty();               return }
 
+            renderChart(data)
             workoutList.innerHTML = ""
             data.forEach(w => workoutList.appendChild(buildCard(w)))
+        }
+
+        function renderChart(data) {
+            const sorted   = [...data].reverse()
+            const labels   = sorted.map(w => {
+                const d = new Date(w.created_at)
+                return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" })
+            })
+            const walkData  = sorted.map(w => w.walk_minutes)
+            const runData   = sorted.map(w => w.run_minutes)
+            const cycleData = sorted.map(w => w.cycles)
+            const totalData = sorted.map(w => (w.walk_minutes + w.run_minutes) * w.cycles)
+
+            chartContainer.classList.remove("hidden")
+            if (evolutionChart) evolutionChart.destroy()
+
+            const canvas = document.getElementById("evolutionChart")
+            const ctx    = canvas.getContext("2d")
+
+            const walkGrad = ctx.createLinearGradient(0, 0, 0, 180)
+            walkGrad.addColorStop(0, "rgba(215,255,0,0.22)")
+            walkGrad.addColorStop(1, "rgba(215,255,0,0)")
+
+            const runGrad   = ctx.createLinearGradient(0, 0, 0, 180)
+            runGrad.addColorStop(0, "rgba(255,107,107,0.22)")
+            runGrad.addColorStop(1, "rgba(255,107,107,0)")
+
+            const cycleGrad = ctx.createLinearGradient(0, 0, 0, 180)
+            cycleGrad.addColorStop(0, "rgba(96,165,250,0.22)")
+            cycleGrad.addColorStop(1, "rgba(96,165,250,0)")
+
+            const totalGrad = ctx.createLinearGradient(0, 0, 0, 180)
+            totalGrad.addColorStop(0, "rgba(251,146,60,0.22)")
+            totalGrad.addColorStop(1, "rgba(251,146,60,0)")
+
+            const colPlugin = {
+                id: "colHighlight",
+                beforeDatasetsDraw(chart) {
+                    const { ctx: c, chartArea: { top, bottom }, scales: { x } } = chart
+                    if (!x || x.ticks.length < 2) return
+                    const step = x.getPixelForTick(1) - x.getPixelForTick(0)
+                    const colW = Math.min(step * 0.52, 34)
+                    const r    = colW / 2
+                    x.ticks.forEach((_, i) => {
+                        const cx = x.getPixelForTick(i)
+                        c.save()
+                        c.fillStyle = "rgba(255,255,255,0.045)"
+                        c.beginPath()
+                        const x0 = cx - colW / 2
+                        const h  = bottom - top
+                        c.moveTo(x0 + r, top)
+                        c.arcTo(x0 + colW, top, x0 + colW, top + h, r)
+                        c.arcTo(x0 + colW, top + h, x0, top + h, r)
+                        c.arcTo(x0, top + h, x0, top, r)
+                        c.arcTo(x0, top, x0 + colW, top, r)
+                        c.closePath()
+                        c.fill()
+                        c.restore()
+                    })
+                }
+            }
+
+            evolutionChart = new Chart(ctx, {
+                type: "line",
+                plugins: [colPlugin],
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: "Caminar",
+                            data: walkData,
+                            borderColor: "#d7ff00",
+                            backgroundColor: walkGrad,
+                            pointBackgroundColor: "#d7ff00",
+                            pointBorderColor: "#111",
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            fill: true,
+                        },
+                        {
+                            label: "Correr",
+                            data: runData,
+                            borderColor: "#ff6b6b",
+                            backgroundColor: runGrad,
+                            pointBackgroundColor: "#ff6b6b",
+                            pointBorderColor: "#111",
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            fill: true,
+                        },
+                        {
+                            label: "Series",
+                            data: cycleData,
+                            borderColor: "#60a5fa",
+                            backgroundColor: cycleGrad,
+                            pointBackgroundColor: "#60a5fa",
+                            pointBorderColor: "#111",
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            fill: true,
+                            yAxisID: "y2",
+                        },
+                        {
+                            label: "Total",
+                            data: totalData,
+                            borderColor: "#fb923c",
+                            backgroundColor: totalGrad,
+                            pointBackgroundColor: "#fb923c",
+                            pointBorderColor: "#111",
+                            pointBorderWidth: 2,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            borderWidth: 2.5,
+                            tension: 0.4,
+                            fill: true,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: "index", intersect: false },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: "#0a0a0a",
+                            borderColor: "rgba(255,255,255,0.1)",
+                            borderWidth: 1,
+                            titleColor: "#777",
+                            bodyColor: "#fff",
+                            padding: { x: 12, y: 8 },
+                            cornerRadius: 12,
+                            displayColors: false,
+                            callbacks: {
+                                label: c => `${c.dataset.label}  ${c.parsed.y} min`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: "#444", font: { size: 10 }, maxRotation: 0 },
+                            grid:   { display: false },
+                            border: { display: false }
+                        },
+                        y: {
+                            ticks:    { color: "#444", font: { size: 10 }, callback: v => v + "m" },
+                            grid:     { display: false },
+                            border:   { display: false },
+                            beginAtZero: true
+                        },
+                        y2: {
+                            position: "right",
+                            ticks:    { color: "#60a5fa", font: { size: 10 }, callback: v => v + "x" },
+                            grid:     { display: false },
+                            border:   { display: false },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            })
         }
 
         function buildCard(w) {
@@ -704,7 +900,7 @@
                 pendingDeleteCard.classList.add("deleting")
                 setTimeout(() => {
                     pendingDeleteCard.remove()
-                    if (!workoutList.children.length) workoutList.innerHTML = renderEmpty()
+                    loadWorkouts()
                 }, 320)
             }
 
