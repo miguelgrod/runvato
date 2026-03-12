@@ -207,6 +207,19 @@
             50%       { opacity: 0.4; }
         }
 
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .chart-spinner {
+            width: 26px;
+            height: 26px;
+            border: 2px solid rgba(215,255,0,0.15);
+            border-top-color: #d7ff00;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+        }
+
         /* ── FORM SECTIONS ── */
 
         .form-section {
@@ -340,8 +353,14 @@
             <!-- GRÁFICO EVOLUCIÓN -->
             <div id="chartContainer" class="hidden mb-4" style="background:#111;border:1px solid #222;border-radius:1rem;padding:1rem 1rem 0.75rem;">
                 <p style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">Evolución · Tiempo corriendo</p>
-                <div id="chartScrollWrapper" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;">
-                    <canvas id="evolutionChart" height="160"></canvas>
+                <div style="position:relative;">
+                    <div id="chartScrollWrapper" style="overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;">
+                        <canvas id="evolutionChart" height="160"></canvas>
+                    </div>
+                    <div id="chartOverlay" style="display:none;position:absolute;inset:0;flex-direction:column;align-items:center;justify-content:center;gap:0.65rem;background:rgba(17,17,17,0.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);border-radius:0.5rem;">
+                        <div class="chart-spinner"></div>
+                        <p style="font-size:0.7rem;color:#888;text-align:center;line-height:1.5;padding:0 1.5rem;">Haz un mínimo de 3 entrenamientos<br>para ver tu evolución</p>
+                    </div>
                 </div>
                 <div class="flex gap-2 mt-2 justify-center pb-1">
                     <div class="flex items-center gap-1.5">
@@ -598,28 +617,34 @@
                 .select("*")
                 .order("created_at", { ascending: false })
 
-            if (error)                    { chartContainer.classList.add("hidden"); workoutList.innerHTML = renderError(error.message); return }
-            if (!data || !data.length)    { chartContainer.classList.add("hidden"); workoutList.innerHTML = renderEmpty();               return }
+            if (error) { chartContainer.classList.add("hidden"); workoutList.innerHTML = renderError(error.message); return }
 
-            renderChart(data)
+            renderChart(data || [])
+            if (!data || !data.length) { workoutList.innerHTML = renderEmpty(); return }
             workoutList.innerHTML = ""
             data.forEach(w => workoutList.appendChild(buildCard(w)))
         }
 
         function renderChart(data) {
-            const sorted  = [...data].reverse()
-            const labels  = sorted.map(w => {
-                const d = new Date(w.created_at)
-                return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" })
-            })
-            const runData = sorted.map(w => w.run_minutes)
+            const sorted      = [...data].reverse()
+            const isPlaceholder = sorted.length < 3  // incluye 0, 1 y 2
+
+            const labels  = isPlaceholder
+                ? ["Ent 1", "Ent 2", "Ent 3", "Ent 4", "Ent 5", "Ent 6"]
+                : sorted.map(w => {
+                    const d = new Date(w.created_at)
+                    return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" })
+                  })
+            const runData = isPlaceholder
+                ? [1.5, 2, 3, 2.5, 4, 5]
+                : sorted.map(w => w.run_minutes)
 
             chartContainer.classList.remove("hidden")
             if (evolutionChart) evolutionChart.destroy()
 
             const canvas        = document.getElementById("evolutionChart")
             const scrollWrapper = document.getElementById("chartScrollWrapper")
-            const totalPoints   = sorted.length
+            const totalPoints   = isPlaceholder ? 6 : sorted.length
             const wrapperW      = scrollWrapper.clientWidth || 360
             const colW          = totalPoints <= 6 ? wrapperW / totalPoints : 60
             const chartW        = Math.round(totalPoints * colW)
@@ -717,6 +742,16 @@
                     }
                 }
             })
+
+            // Overlay & opacity for placeholder mode
+            const overlay = document.getElementById("chartOverlay")
+            if (isPlaceholder) {
+                canvas.style.opacity = "0.2"
+                overlay.style.display = "flex"
+            } else {
+                canvas.style.opacity = "1"
+                overlay.style.display = "none"
+            }
 
             // Scroll to the right to show the latest workouts
             requestAnimationFrame(() => { scrollWrapper.scrollLeft = scrollWrapper.scrollWidth })
