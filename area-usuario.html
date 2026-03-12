@@ -339,24 +339,19 @@
 
             <!-- GRÁFICO EVOLUCIÓN -->
             <div id="chartContainer" class="hidden mb-4" style="background:#111;border:1px solid #222;border-radius:1rem;padding:1rem 1rem 0.75rem;">
-                <p style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.75rem;">Evolución</p>
-                <canvas id="evolutionChart" height="170"></canvas>
-                <div class="flex gap-4 mt-2 justify-center pb-1 flex-wrap">
+                <div class="flex justify-between items-center mb-3">
+                    <p style="font-size:0.65rem;color:#666;text-transform:uppercase;letter-spacing:0.06em;">Scoring</p>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-1" title="Correr 40% · Series 35% · Caminar 20% · Total 5%">
+                            <span style="font-size:0.55rem;color:#444;text-transform:uppercase;letter-spacing:0.05em">Correr 40 · Series 35 · Caminar 20 · Total 5</span>
+                        </div>
+                    </div>
+                </div>
+                <canvas id="evolutionChart" height="160"></canvas>
+                <div class="flex gap-2 mt-2 justify-center pb-1">
                     <div class="flex items-center gap-1.5">
                         <div style="width:8px;height:8px;border-radius:50%;background:#d7ff00;flex-shrink:0"></div>
-                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Caminar</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <div style="width:8px;height:8px;border-radius:50%;background:#ff6b6b;flex-shrink:0"></div>
-                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Correr</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <div style="width:8px;height:8px;border-radius:50%;background:#60a5fa;flex-shrink:0"></div>
-                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Series</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
-                        <div style="width:8px;height:8px;border-radius:50%;background:#fb923c;flex-shrink:0"></div>
-                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Total</span>
+                        <span style="font-size:0.6rem;color:#666;text-transform:uppercase;letter-spacing:0.05em">Puntuación (0–100)</span>
                     </div>
                 </div>
             </div>
@@ -616,16 +611,36 @@
             data.forEach(w => workoutList.appendChild(buildCard(w)))
         }
 
+        function computeScores(workouts) {
+            const norm = (v, min, max) => max === min ? 0.5 : (v - min) / (max - min)
+
+            const runs   = workouts.map(w => w.run_minutes)
+            const walks  = workouts.map(w => w.walk_minutes)
+            const cycles = workouts.map(w => w.cycles)
+            const totals = workouts.map(w => (w.walk_minutes + w.run_minutes) * w.cycles)
+
+            const minRun = Math.min(...runs),   maxRun = Math.max(...runs)
+            const minWalk = Math.min(...walks), maxWalk = Math.max(...walks)
+            const minCyc = Math.min(...cycles), maxCyc = Math.max(...cycles)
+            const minTot = Math.min(...totals), maxTot = Math.max(...totals)
+
+            return workouts.map((w, i) => {
+                const runScore   =       norm(runs[i],   minRun,  maxRun)
+                const walkScore  = 1   - norm(walks[i],  minWalk, maxWalk)
+                const cycleScore =       norm(cycles[i], minCyc,  maxCyc)
+                const totalScore =       norm(totals[i], minTot,  maxTot)
+                const raw = 0.40 * runScore + 0.35 * cycleScore + 0.20 * walkScore + 0.05 * totalScore
+                return Math.round(raw * 100)
+            })
+        }
+
         function renderChart(data) {
-            const sorted   = [...data].reverse()
-            const labels   = sorted.map(w => {
+            const sorted  = [...data].reverse()
+            const labels  = sorted.map(w => {
                 const d = new Date(w.created_at)
                 return d.toLocaleDateString("es-ES", { day: "numeric", month: "short" })
             })
-            const walkData  = sorted.map(w => w.walk_minutes)
-            const runData   = sorted.map(w => w.run_minutes)
-            const cycleData = sorted.map(w => w.cycles)
-            const totalData = sorted.map(w => (w.walk_minutes + w.run_minutes) * w.cycles)
+            const scores  = computeScores(sorted)
 
             chartContainer.classList.remove("hidden")
             if (evolutionChart) evolutionChart.destroy()
@@ -633,21 +648,9 @@
             const canvas = document.getElementById("evolutionChart")
             const ctx    = canvas.getContext("2d")
 
-            const walkGrad = ctx.createLinearGradient(0, 0, 0, 180)
-            walkGrad.addColorStop(0, "rgba(215,255,0,0.22)")
-            walkGrad.addColorStop(1, "rgba(215,255,0,0)")
-
-            const runGrad   = ctx.createLinearGradient(0, 0, 0, 180)
-            runGrad.addColorStop(0, "rgba(255,107,107,0.22)")
-            runGrad.addColorStop(1, "rgba(255,107,107,0)")
-
-            const cycleGrad = ctx.createLinearGradient(0, 0, 0, 180)
-            cycleGrad.addColorStop(0, "rgba(96,165,250,0.22)")
-            cycleGrad.addColorStop(1, "rgba(96,165,250,0)")
-
-            const totalGrad = ctx.createLinearGradient(0, 0, 0, 180)
-            totalGrad.addColorStop(0, "rgba(251,146,60,0.22)")
-            totalGrad.addColorStop(1, "rgba(251,146,60,0)")
+            const scoreGrad = ctx.createLinearGradient(0, 0, 0, 180)
+            scoreGrad.addColorStop(0, "rgba(215,255,0,0.25)")
+            scoreGrad.addColorStop(1, "rgba(215,255,0,0)")
 
             const colPlugin = {
                 id: "colHighlight",
@@ -681,65 +684,20 @@
                 plugins: [colPlugin],
                 data: {
                     labels,
-                    datasets: [
-                        {
-                            label: "Caminar",
-                            data: walkData,
-                            borderColor: "#d7ff00",
-                            backgroundColor: walkGrad,
-                            pointBackgroundColor: "#d7ff00",
-                            pointBorderColor: "#111",
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            fill: true,
-                        },
-                        {
-                            label: "Correr",
-                            data: runData,
-                            borderColor: "#ff6b6b",
-                            backgroundColor: runGrad,
-                            pointBackgroundColor: "#ff6b6b",
-                            pointBorderColor: "#111",
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            fill: true,
-                        },
-                        {
-                            label: "Series",
-                            data: cycleData,
-                            borderColor: "#60a5fa",
-                            backgroundColor: cycleGrad,
-                            pointBackgroundColor: "#60a5fa",
-                            pointBorderColor: "#111",
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            fill: true,
-                            yAxisID: "y2",
-                        },
-                        {
-                            label: "Total",
-                            data: totalData,
-                            borderColor: "#fb923c",
-                            backgroundColor: totalGrad,
-                            pointBackgroundColor: "#fb923c",
-                            pointBorderColor: "#111",
-                            pointBorderWidth: 2,
-                            pointRadius: 5,
-                            pointHoverRadius: 7,
-                            borderWidth: 2.5,
-                            tension: 0.4,
-                            fill: true,
-                        }
-                    ]
+                    datasets: [{
+                        label: "Scoring",
+                        data: scores,
+                        borderColor: "#d7ff00",
+                        backgroundColor: scoreGrad,
+                        pointBackgroundColor: scores.map(s => s >= 70 ? "#d7ff00" : s >= 40 ? "#fb923c" : "#ff6b6b"),
+                        pointBorderColor: "#111",
+                        pointBorderWidth: 2,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        borderWidth: 2.5,
+                        tension: 0.4,
+                        fill: true,
+                    }]
                 },
                 options: {
                     responsive: true,
@@ -756,7 +714,7 @@
                             cornerRadius: 12,
                             displayColors: false,
                             callbacks: {
-                                label: c => `${c.dataset.label}  ${c.parsed.y} min`
+                                label: c => `Score  ${c.parsed.y} pts`
                             }
                         }
                     },
@@ -767,17 +725,11 @@
                             border: { display: false }
                         },
                         y: {
-                            ticks:    { color: "#444", font: { size: 10 }, callback: v => v + "m" },
-                            grid:     { display: false },
-                            border:   { display: false },
-                            beginAtZero: true
-                        },
-                        y2: {
-                            position: "right",
-                            ticks:    { color: "#60a5fa", font: { size: 10 }, callback: v => v + "x" },
-                            grid:     { display: false },
-                            border:   { display: false },
-                            beginAtZero: true
+                            min: 0,
+                            max: 100,
+                            ticks: { color: "#444", font: { size: 10 }, stepSize: 25, callback: v => v },
+                            grid:   { display: false },
+                            border: { display: false }
                         }
                     }
                 }
