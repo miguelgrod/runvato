@@ -53,7 +53,13 @@
     .hero-bg {
       background-image: url('web/src/bg-home.webp');
       background-size: cover;
-      background-position: center;
+      background-position: 60% center;
+    }
+
+    @media (max-width: 767px) {
+      .hero-bg {
+        background-position: center center;
+      }
     }
 
     .site-container {
@@ -123,7 +129,7 @@
           Runvato es la app para que los principiantes comiencen a correr a su ritmo, sin agobios ni objetivos incalcanzables.
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <a href="app/index.html">
             <button class="flex items-center justify-center gap-2 bg-[#D1FF00] text-black px-8 py-4 rounded-full text-base font-bold transition-transform active:scale-95 shadow-2xl" style="box-shadow:0 0 40px rgba(209,255,0,0.25)">
               <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1,'wght' 700">directions_run</span>
