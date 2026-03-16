@@ -22,3 +22,9 @@ jobs:
           port: 22
           uploads: |
             ./ => www/
+          ignore: |
+            .git
+            .git/**
+            .github
+            .github/**
+            **/.DS_Store
