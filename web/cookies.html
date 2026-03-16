@@ -13,6 +13,9 @@
   </style>
 </head>
 <body class="min-h-screen">
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KDDHTXZL" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
   <nav class="flex items-center justify-between px-6 py-4 border-b" style="border-color:#1a1a1a;">
     <a href="../index.html" class="flex items-center gap-2">
@@ -22,9 +25,63 @@
   </nav>
 
   <main class="max-w-2xl mx-auto px-6 py-16">
-    <h1 class="runvato-font text-4xl uppercase mb-8">Política de cookies</h1>
-    <p class="text-gray-500 text-sm">Contenido pendiente de redacción.</p>
+    <h1 class="runvato-font text-4xl uppercase mb-4">Política de cookies</h1>
+    <p class="text-gray-500 text-sm mb-12">Última actualización: 17 de marzo de 2026</p>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-4">¿Qué son las cookies?</h2>
+      <p class="text-gray-300">Las cookies son pequeños archivos de texto que los sitios web almacenan en tu dispositivo cuando los visitas. Se utilizan para recordar preferencias, analizar el tráfico o personalizar la experiencia de usuario.</p>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-4">Cookies que utilizamos</h2>
+      <p class="text-gray-300 mb-6">Runvato.com utiliza únicamente cookies de analítica a través de Google Analytics (GA4), y solo si el usuario acepta explícitamente su uso.</p>
+
+      <div class="border border-[#1a1a1a] rounded-lg overflow-hidden">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-[#1a1a1a]">
+              <th class="text-left px-4 py-3 text-gray-400 font-medium">Cookie</th>
+              <th class="text-left px-4 py-3 text-gray-400 font-medium">Proveedor</th>
+              <th class="text-left px-4 py-3 text-gray-400 font-medium">Finalidad</th>
+              <th class="text-left px-4 py-3 text-gray-400 font-medium">Duración</th>
+            </tr>
+          </thead>
+          <tbody class="text-gray-300">
+            <tr class="border-b border-[#111]">
+              <td class="px-4 py-3 font-mono text-xs">_ga</td>
+              <td class="px-4 py-3">Google Analytics</td>
+              <td class="px-4 py-3">Distingue usuarios únicos</td>
+              <td class="px-4 py-3">2 años</td>
+            </tr>
+            <tr>
+              <td class="px-4 py-3 font-mono text-xs">_ga_XXXXXXXX</td>
+              <td class="px-4 py-3">Google Analytics</td>
+              <td class="px-4 py-3">Mantiene el estado de la sesión</td>
+              <td class="px-4 py-3">2 años</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-4">Gestión del consentimiento</h2>
+      <p class="text-gray-300 mb-4">Al visitar runvato.com por primera vez se te mostrará un banner para aceptar o rechazar las cookies de analítica. Tu elección queda guardada en tu navegador.</p>
+      <p class="text-gray-300 mb-6">Puedes cambiar tu preferencia en cualquier momento pulsando el botón de abajo:</p>
+      <button onclick="localStorage.removeItem('runvato_cookie_consent'); location.reload();" style="
+        background: transparent; border: 1px solid #333; color: #aaa;
+        border-radius: 6px; padding: 10px 20px; cursor: pointer;
+        font-family: Lexend, sans-serif; font-size: 13px;
+      ">Restablecer mis preferencias de cookies</button>
+    </section>
+
+    <section class="mb-10">
+      <h2 class="text-xl font-semibold mb-4">Más información</h2>
+      <p class="text-gray-300">Google Analytics procesa los datos de acuerdo con su propia <a href="https://policies.google.com/privacy" target="_blank" rel="noopener" class="text-[#D1FF00] hover:underline">política de privacidad</a>. Hemos activado la anonimización de IP para minimizar los datos transmitidos.</p>
+    </section>
   </main>
 
+  <script src="../cookie-consent.js"></script>
 </body>
 </html>
