@@ -1,137 +1,347 @@
 <!DOCTYPE html>
-<html class="dark" lang="es">
+<html lang="es">
 
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Runvato | Running para principiantes</title>
+  <title>Runvato | Entrena a tu ritmo</title>
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
-      darkMode: "class",
       theme: {
         extend: {
           colors: {
             primary: "#D1FF00",
-            "background-light": "#f8f8f5",
-            "background-dark": "#000000",
           },
           fontFamily: {
             display: ["Lexend", "sans-serif"]
           },
-          borderRadius: {
-            DEFAULT: "1rem",
-            lg: "2rem",
-            xl: "3rem",
-            full: "9999px"
+          maxWidth: {
+            site: "1440px",
           }
         }
       }
     }
   </script>
 
-  <style type="text/tailwindcss">
-    @layer base {
-      html, body {
-        height: 100%;
-      }
-    }
-
+  <style>
     .runvato-font {
       font-family: 'Lexend', sans-serif;
       font-weight: 800;
       letter-spacing: -0.05em;
       font-style: italic;
     }
-  </style>
 
+    body {
+      background: #000;
+      font-family: 'Lexend', sans-serif;
+      color: #fff;
+    }
+
+    .card-img img {
+      transition: transform 0.4s ease;
+    }
+
+    .card:hover .card-img img {
+      transform: scale(1.04);
+    }
+
+    .hero-bg {
+      background-image: url('web/src/bg-home.webp');
+      background-size: cover;
+      background-position: center;
+    }
+
+    .site-container {
+      max-width: 1440px;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .site-container {
+        padding-left: 2.5rem;
+        padding-right: 2.5rem;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      .site-container {
+        padding-left: 4rem;
+        padding-right: 4rem;
+      }
+    }
+  </style>
 </head>
 
-<body class="bg-background-dark font-display text-slate-100 antialiased">
+<body>
 
-  <div class="relative flex h-[100dvh] w-full flex-col overflow-hidden">
+  <!-- NAV -->
+  <nav class="fixed top-0 left-0 right-0 z-50" style="background:rgba(0,0,0,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);">
+    <div class="site-container flex items-center justify-between py-4">
 
-    <div class="absolute inset-0 z-0">
-      <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20 z-10"></div>
-      <div class="w-full h-full bg-cover bg-center"
-        style="background-image:url('img/bgimage.webp');">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-[#D1FF00] text-3xl" style="font-variation-settings:'FILL' 1,'wght' 700">bolt</span>
+        <span class="runvato-font text-white text-lg uppercase">Runvato</span>
       </div>
+
+      <a href="app/index.html">
+        <button class="flex items-center gap-1.5 bg-[#D1FF00] text-black px-5 py-2 rounded-full text-sm font-bold transition-transform active:scale-95">
+          Empezar gratis
+          <span class="material-symbols-outlined text-base" style="font-size:1rem">arrow_forward</span>
+        </button>
+      </a>
+
     </div>
+  </nav>
 
-    <div class="relative z-20 flex flex-col h-full items-center">
+  <!-- HERO -->
+  <section class="relative hero-bg min-h-screen flex items-end">
 
-    <div class="w-full flex flex-col h-full" style="max-width:430px;">
+    <div class="absolute inset-0" style="background:linear-gradient(to top, #000 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.3) 100%);"></div>
 
-      <header class="flex items-center justify-between px-6 pt-8 pb-2 shrink-0">
+    <div class="relative z-10 w-full site-container pb-[164px] pt-32 text-center">
+      <div class="max-w-2xl mx-auto">
 
-        <div class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings:'FILL'1,'wght'700">
-            bolt
-          </span>
-          <span class="runvato-font text-white text-xl uppercase">
-            Runvato
-          </span>
+        <div class="inline-flex items-center gap-2 bg-white/10 border border-white/20 rounded-full px-4 py-1.5 mb-8 backdrop-blur-sm">
+          <span class="material-symbols-outlined text-[#D1FF00] text-base" style="font-size:1rem;font-variation-settings:'FILL' 1">bolt</span>
+          <span class="text-sm text-gray-300 font-medium">Nivel Principiante</span>
         </div>
 
-        <!--
-        BOTÓN INFO TOP RIGHT
-        <button class="bg-white/10 backdrop-blur-md rounded-full p-2 text-white">
-          <span class="material-symbols-outlined">
-            help_outline
-          </span>
-        </button>-->
-
-      </header>
-
-      <div class="flex-1 flex flex-col items-center justify-center px-8 text-center">
-
-        <div class="mb-6 inline-flex items-center justify-center p-5 bg-primary/20 rounded-full border border-primary/30 backdrop-blur-sm">
-          <span class="material-symbols-outlined text-primary text-6xl">
-            directions_run
-          </span>
-        </div>
-
-        <h1 class="runvato-font text-white text-5xl md:text-7xl uppercase leading-[0.85] mb-4">
-          <span class="block">
-            RUNVATO
-          </span>
+        <h1 class="runvato-font text-6xl md:text-8xl uppercase leading-[0.85] mb-6">
+          Running,<br>
+          <span style="color:#D1FF00">empieza desde cero.</span>
         </h1>
 
-        <p class="text-white text-base md:text-lg font-medium leading-tight max-w-[280px] drop-shadow-md">
-          Entrena a tu ritmo combinando intervalos de caminar y correr.
+        <p class="text-gray-300 text-lg md:text-xl font-light leading-relaxed max-w-lg mx-auto mb-10">
+          Runvato es la app para que los principiantes comiencen a correr a su ritmo, sin agobios ni objetivos incalcanzables.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="app/index.html">
+            <button class="flex items-center justify-center gap-2 bg-[#D1FF00] text-black px-8 py-4 rounded-full text-base font-bold transition-transform active:scale-95 shadow-2xl" style="box-shadow:0 0 40px rgba(209,255,0,0.25)">
+              <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1,'wght' 700">directions_run</span>
+              Empezar gratis
+            </button>
+          </a>
+          <a href="#como-funciona">
+            <button class="flex items-center justify-center gap-2 border border-white/20 text-white px-8 py-4 rounded-full text-base font-medium hover:bg-white/5 transition-colors">
+              Cómo funciona
+              <span class="material-symbols-outlined text-base" style="font-size:1rem">expand_more</span>
+            </button>
+          </a>
+        </div>
+
+        <p class="mt-6 text-sm text-gray-500">
+          <span style="color:#D1FF00">&#10003;</span> Gratis para los primeros 500 usuarios
         </p>
 
       </div>
+    </div>
 
-      <div class="px-8 pb-10 pt-4 shrink-0">
+  </section>
 
-        <a href="app.html">
-          <button class="flex items-center justify-center w-full h-14 bg-primary text-black rounded-full text-lg runvato-font uppercase tracking-wide transition-transform active:scale-95 shadow-2xl shadow-primary/30">
-            <span>
-              Empezar
-            </span>
-            <span class="material-symbols-outlined ml-2 font-bold">
-              arrow_forward
-            </span>
-          </button>
+  <!-- CÓMO FUNCIONA -->
+  <section id="como-funciona" class="py-24" style="background:#000;">
+    <div class="site-container">
+
+      <div class="text-center mb-16">
+        <h2 class="runvato-font text-4xl md:text-5xl uppercase mb-4">Cómo funciona</h2>
+        <p class="text-gray-400 text-lg">Tres pasos para empezar a correr hoy mismo.</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+
+        <div class="flex flex-col items-center text-center p-6 md:p-8" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <div class="flex items-center justify-center w-14 h-14 rounded-full mb-5" style="background:rgba(209,255,0,0.1);border:1px solid rgba(209,255,0,0.2);">
+            <span class="material-symbols-outlined text-[#D1FF00] text-3xl" style="font-variation-settings:'FILL' 1,'wght' 700">tune</span>
+          </div>
+          <span class="text-xs text-gray-600 uppercase tracking-widest mb-2">Paso 1</span>
+          <h3 class="font-bold text-lg mb-2">Configura tu entreno</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Elige cuántos minutos caminar, cuántos correr y cuántas series quieres hacer.</p>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-6 md:p-8" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <div class="flex items-center justify-center w-14 h-14 rounded-full mb-5" style="background:rgba(209,255,0,0.1);border:1px solid rgba(209,255,0,0.2);">
+            <span class="material-symbols-outlined text-[#D1FF00] text-3xl" style="font-variation-settings:'FILL' 1,'wght' 700">play_circle</span>
+          </div>
+          <span class="text-xs text-gray-600 uppercase tracking-widest mb-2">Paso 2</span>
+          <h3 class="font-bold text-lg mb-2">Pon el móvil en el bolsillo</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Sonidos y avisos de voz te dicen cuándo caminar y cuándo correr. Sin mirar la pantalla.</p>
+        </div>
+
+        <div class="flex flex-col items-center text-center p-6 md:p-8" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <div class="flex items-center justify-center w-14 h-14 rounded-full mb-5" style="background:rgba(209,255,0,0.1);border:1px solid rgba(209,255,0,0.2);">
+            <span class="material-symbols-outlined text-[#D1FF00] text-3xl" style="font-variation-settings:'FILL' 1,'wght' 700">trending_up</span>
+          </div>
+          <span class="text-xs text-gray-600 uppercase tracking-widest mb-2">Paso 3</span>
+          <h3 class="font-bold text-lg mb-2">Sigue tu progreso</h3>
+          <p class="text-gray-400 text-sm leading-relaxed">Guarda cada entrenamiento y visualiza cómo aumentas el tiempo corriendo semana a semana.</p>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="py-24" style="background:#080808;">
+    <div class="site-container">
+
+      <div class="text-center mb-16">
+        <h2 class="runvato-font text-4xl md:text-5xl uppercase mb-4">Diseñado para empezar</h2>
+        <p class="text-gray-400 text-lg">Sin apps complicadas. Sin suscripciones. Solo sal a correr.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <div class="flex flex-col gap-4 p-6" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <span class="material-symbols-outlined text-[#D1FF00] text-2xl shrink-0" style="font-variation-settings:'FILL' 1,'wght' 700">music_note</span>
+          <div>
+            <h4 class="font-semibold mb-1">Música incluida</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">Entrena con música de fondo que se reduce automáticamente cuando llegan los avisos.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4 p-6" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <span class="material-symbols-outlined text-[#D1FF00] text-2xl shrink-0" style="font-variation-settings:'FILL' 1,'wght' 700">timer</span>
+          <div>
+            <h4 class="font-semibold mb-1">Intervalos personalizables</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">Desde 30 segundos hasta minutos de carrera. Adapta el entreno a tu nivel.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4 p-6" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <span class="material-symbols-outlined text-[#D1FF00] text-2xl shrink-0" style="font-variation-settings:'FILL' 1,'wght' 700">bar_chart</span>
+          <div>
+            <h4 class="font-semibold mb-1">Historial de entrenamientos</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">Visualiza tu evolución con gráficas claras. Ve cómo avanzas mes a mes.</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-4 p-6" style="background:#0d0d0d;border:1px solid #1a1a1a;border-radius:1.25rem;">
+          <span class="material-symbols-outlined text-[#D1FF00] text-2xl shrink-0" style="font-variation-settings:'FILL' 1,'wght' 700">smartphone</span>
+          <div>
+            <h4 class="font-semibold mb-1">Funciona en cualquier móvil</h4>
+            <p class="text-gray-400 text-sm leading-relaxed">Sin descargas. Abre el navegador y ya está. Compatible con iOS y Android.</p>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section class="py-24" style="background:#000;">
+    <div class="site-container">
+
+      <div class="text-center mb-12">
+        <h2 class="runvato-font text-4xl md:text-5xl uppercase mb-4">Del blog</h2>
+        <p class="text-gray-400 text-lg">Consejos para corredores que empiezan.</p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <a href="blog/zapatillas-para-correr.html" class="card group flex flex-col rounded-2xl overflow-hidden border" style="border-color:#1a1a1a;background:#0a0a0a;">
+          <div class="card-img aspect-video overflow-hidden">
+            <img src="blog/src/featured_zapatillas.webp" alt="Cómo elegir tus primeras zapatillas para correr" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+          </div>
+          <div class="flex flex-col flex-1 p-5">
+            <span class="text-xs text-[#D1FF00] uppercase tracking-widest mb-2">Consejos para empezar</span>
+            <h3 class="runvato-font text-xl uppercase leading-[0.95] mb-3 group-hover:text-[#D1FF00] transition-colors">Cómo elegir tus primeras zapatillas para correr (sin complicarte la vida)</h3>
+            <p class="text-gray-500 text-xs font-light flex-1 leading-relaxed mb-4">No necesitas gastarte una fortuna ni entender términos técnicos raros. Te contamos exactamente qué mirar.</p>
+            <time class="text-gray-600 text-xs">16 mar 2026</time>
+          </div>
+        </a>
+
+        <a href="blog/no-hace-falta-ser-runner.html" class="card group flex flex-col rounded-2xl overflow-hidden border" style="border-color:#1a1a1a;background:#0a0a0a;">
+          <div class="card-img aspect-video overflow-hidden">
+            <img src="blog/src/featured01.webp" alt="No hace falta ser runner para correr" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+          </div>
+          <div class="flex flex-col flex-1 p-5">
+            <span class="text-xs text-[#D1FF00] uppercase tracking-widest mb-2">Consejos para empezar</span>
+            <h3 class="runvato-font text-xl uppercase leading-[0.95] mb-3 group-hover:text-[#D1FF00] transition-colors">No hace falta ser runner para correr</h3>
+            <p class="text-gray-500 text-xs font-light flex-1 leading-relaxed mb-4">No hace falta tener condición física ni experiencia. Solo querer intentarlo y hacerlo bien desde el principio.</p>
+            <time class="text-gray-600 text-xs">10 mar 2026</time>
+          </div>
+        </a>
+
+        <a href="blog/el-calentamiento.html" class="card group flex flex-col rounded-2xl overflow-hidden border" style="border-color:#1a1a1a;background:#0a0a0a;">
+          <div class="card-img aspect-video overflow-hidden">
+            <img src="blog/src/estiramientos.webp" alt="El calentamiento, tu mejor amigo" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105">
+          </div>
+          <div class="flex flex-col flex-1 p-5">
+            <span class="text-xs text-[#D1FF00] uppercase tracking-widest mb-2">Consejos para empezar</span>
+            <h3 class="runvato-font text-xl uppercase leading-[0.95] mb-3 group-hover:text-[#D1FF00] transition-colors">El calentamiento, tu mejor amigo</h3>
+            <p class="text-gray-500 text-xs font-light flex-1 leading-relaxed mb-4">Cinco minutos antes de salir a correr pueden cambiar cómo te sientes en cada salida. Te contamos cómo hacerlo.</p>
+            <time class="text-gray-600 text-xs">16 mar 2026</time>
+          </div>
         </a>
 
       </div>
 
-    </div>
+      <div class="text-center mt-10">
+        <a href="blog/grid-blog.html">
+          <button class="inline-flex items-center gap-2 border border-white/20 text-white px-7 py-3 rounded-full text-sm font-medium hover:bg-white/5 transition-colors">
+            Ver más publicaciones
+            <span class="material-symbols-outlined text-base" style="font-size:1rem">arrow_forward</span>
+          </button>
+        </a>
+      </div>
 
     </div>
+  </section>
 
-    <div class="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 bg-white/30 rounded-full z-30"></div>
+  <!-- CTA FINAL -->
+  <section class="py-24 px-6 text-center" style="background:#000;">
 
-  </div>
+    <div class="max-w-lg mx-auto">
+
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-8" style="background:rgba(209,255,0,0.12);border:1px solid rgba(209,255,0,0.25);">
+        <span class="material-symbols-outlined text-[#D1FF00] text-5xl" style="font-variation-settings:'FILL' 1,'wght' 700">directions_run</span>
+      </div>
+
+      <h2 class="runvato-font text-5xl md:text-6xl uppercase leading-[0.9] mb-5">
+        Tu primera<br>
+        <span style="color:#D1FF00">carrera</span><br>
+        empieza aquí.
+      </h2>
+
+      <p class="text-gray-400 text-lg mb-10">Gratis. Sin registro obligatorio. Listo en segundos.</p>
+
+      <a href="app/">
+        <button class="flex items-center justify-center gap-2 mx-auto bg-[#D1FF00] text-black px-10 py-4 rounded-full text-lg font-bold transition-transform active:scale-95" style="box-shadow:0 0 60px rgba(209,255,0,0.2)">
+          <span class="runvato-font uppercase">Empezar ahora</span>
+          <span class="material-symbols-outlined" style="font-variation-settings:'FILL' 1,'wght' 700">arrow_forward</span>
+        </button>
+      </a>
+
+    </div>
+
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="py-8 text-center border-t" style="border-color:#111;">
+    <div class="site-container">
+      <div class="flex items-center justify-center gap-1.5 mb-3">
+        <span class="material-symbols-outlined text-[#D1FF00] text-xl" style="font-variation-settings:'FILL' 1,'wght' 700">bolt</span>
+        <span class="runvato-font text-white text-sm uppercase">Runvato</span>
+      </div>
+      <p class="text-gray-600 text-xs mb-4">Entrena a tu ritmo.</p>
+      <div class="flex items-center justify-center gap-6">
+        <a href="web/privacidad.html" class="text-gray-600 text-xs hover:text-gray-400 transition-colors">Política de privacidad</a>
+        <a href="web/cookies.html" class="text-gray-600 text-xs hover:text-gray-400 transition-colors">Política de cookies</a>
+      </div>
+    </div>
+  </footer>
 
 </body>
-<!--last-->
 
 </html>

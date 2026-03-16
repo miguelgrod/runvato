@@ -796,8 +796,8 @@
             if (phase === "walk") {
                 const t10 = msLeft - 13000
                 const t3  = msLeft - 3000
-                scheduledAlerts.push(setTimeout(() => playAlert('warn10'), Math.max(0, t10)))
-                scheduledAlerts.push(setTimeout(() => playAlert('warn3'),  Math.max(0, t3)))
+                if (t10 > 0) scheduledAlerts.push(setTimeout(() => playAlert('warn10'), t10))
+                if (t3  > 0) scheduledAlerts.push(setTimeout(() => playAlert('warn3'),  t3))
             } else {
                 const tHalf = msLeft - Math.floor(runTime / 2) * 1000
                 if (tHalf > 0) scheduledAlerts.push(setTimeout(() => playAlert('halfRun'), tHalf))

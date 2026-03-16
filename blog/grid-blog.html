@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog | Runvato</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <style>
+    .runvato-font {
+      font-family: 'Lexend', sans-serif;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      font-style: italic;
+    }
+
+    body {
+      background: #000;
+      font-family: 'Lexend', sans-serif;
+      color: #fff;
+    }
+
+    .card-img {
+      overflow: hidden;
+    }
+
+    .card-img img {
+      transition: transform 0.4s ease;
+    }
+
+    .card:hover .card-img img {
+      transform: scale(1.04);
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- NAV -->
+  <nav class="flex items-center justify-between px-6 py-4 border-b" style="border-color:#1a1a1a;">
+    <a href="../index.html" class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[#D1FF00] text-3xl" style="font-variation-settings:'FILL' 1,'wght' 700">bolt</span>
+      <span class="runvato-font text-white text-lg uppercase">Runvato</span>
+    </a>
+    <a href="../app/index.html">
+      <button class="flex items-center gap-1.5 bg-[#D1FF00] text-black px-5 py-2 rounded-full text-sm font-bold transition-transform active:scale-95">
+        Empezar gratis
+        <span class="material-symbols-outlined text-base" style="font-size:1rem">arrow_forward</span>
+      </button>
+    </a>
+  </nav>
+
+  <!-- HEADER -->
+  <header class="mx-auto px-6 pt-16 pb-10" style="max-width:1440px;">
+    <span class="inline-block text-xs text-[#D1FF00] uppercase tracking-widest mb-4">Blog</span>
+    <h1 class="runvato-font text-5xl md:text-6xl uppercase leading-[0.9]">Artículos</h1>
+    <p class="text-gray-400 text-sm mt-4 font-light">Consejos, métodos y motivación para que empieces a correr — y no lo dejes.</p>
+  </header>
+
+  <!-- GRID -->
+  <main class="mx-auto px-6 pb-24" style="max-width:1440px;">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- POST: El calentamiento, tu mejor amigo — 2026-03-16 -->
+      <a href="el-calentamiento.html" class="card group flex flex-col rounded-2xl overflow-hidden border" style="border-color:#1a1a1a;background:#0a0a0a;">
+        <div class="card-img aspect-video">
+          <img
+            src="src/estiramientos.webp"
+            alt="El calentamiento, tu mejor amigo"
+            class="w-full h-full object-cover"
+          >
+        </div>
+        <div class="flex flex-col flex-1 p-5">
+          <span class="text-xs text-[#D1FF00] uppercase tracking-widest mb-2">Consejos para empezar</span>
+          <h2 class="runvato-font text-xl uppercase leading-[0.95] mb-3 group-hover:text-[#D1FF00] transition-colors">
+            El calentamiento, tu mejor amigo
+          </h2>
+          <p class="text-gray-500 text-xs font-light flex-1 leading-relaxed mb-4">
+            Cinco minutos antes de salir a correr pueden cambiar cómo te sientes en cada salida. Te contamos cómo hacerlo.
+          </p>
+          <time class="text-gray-600 text-xs">16 mar 2026</time>
+        </div>
+      </a>
+
+      <!-- POST: Cómo elegir tus primeras zapatillas para correr — 2026-03-16 -->
+      <a href="zapatillas-para-correr.html" class="card group flex flex-col rounded-2xl overflow-hidden border" style="border-color:#1a1a1a;background:#0a0a0a;">
+        <div class="card-img aspect-video">
+          <img
+            src="src/featured_zapatillas.webp"
+            alt="Cómo elegir tus primeras zapatillas para correr"
+            class="w-full h-full object-cover"
+          >
+        </div>
+        <div class="flex flex-col flex-1 p-5">
+          <span class="text-xs text-[#D1FF00] uppercase tracking-widest mb-2">Consejos para empezar</span>
+          <h2 class="runvato-font text-xl uppercase leading-[0.95] mb-3 group-hover:text-[#D1FF00] transition-colors">
+            Cómo elegir tus primeras zapatillas para correr (sin complicarte la vida)
+          </h2>
+          <p class="text-gray-500 text-xs font-light flex-1 leading-relaxed mb-4">
+            No necesitas gastarte una fortuna ni entender términos técnicos. Te contamos exactamente qué mirar antes de comprar.
+          </p>
+          <time class="text-gray-600 text-xs">16 mar 2026</time>
+        </div>
+      </a>
+
+      <!-- POST: No hace falta ser runner para correr — 2026-03-10 -->
+      <a href="no-hace-falta-ser-runner.html" class="card group flex flex-col rounded-2xl overflow-hidden border" style="border-color:#1a1a1a;background:#0a0a0a;">
+        <div class="card-img aspect-video">
+          <img
+            src="src/featured01.webp"
+            alt="No hace falta ser runner para correr"
+            class="w-full h-full object-cover"
+          >
+        </div>
+        <div class="flex flex-col flex-1 p-5">
+          <span class="text-xs text-[#D1FF00] uppercase tracking-widest mb-2">Consejos para empezar</span>
+          <h2 class="runvato-font text-xl uppercase leading-[0.95] mb-3 group-hover:text-[#D1FF00] transition-colors">
+            No hace falta ser runner para correr
+          </h2>
+          <p class="text-gray-500 text-xs font-light flex-1 leading-relaxed mb-4">
+            Cómo empezar desde cero sin experiencia, qué es el método CA-CO y por qué funciona cuando todo lo demás falla.
+          </p>
+          <time class="text-gray-600 text-xs">10 mar 2026</time>
+        </div>
+      </a>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="py-8 px-6 text-center border-t" style="border-color:#111;">
+    <div class="flex items-center justify-center gap-1.5 mb-3">
+      <span class="material-symbols-outlined text-[#D1FF00] text-xl" style="font-variation-settings:'FILL' 1,'wght' 700">bolt</span>
+      <span class="runvato-font text-white text-sm uppercase">Runvato</span>
+    </div>
+    <p class="text-gray-600 text-xs mb-4">Entrena a tu ritmo.</p>
+    <div class="flex items-center justify-center gap-6">
+      <a href="../web/privacidad.html" class="text-gray-600 text-xs hover:text-gray-400 transition-colors">Política de privacidad</a>
+      <a href="../web/cookies.html" class="text-gray-600 text-xs hover:text-gray-400 transition-colors">Política de cookies</a>
+    </div>
+  </footer>
+
+</body>
+
+</html>
