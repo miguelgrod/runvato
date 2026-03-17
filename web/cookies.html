@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Política de cookies | Runvato</title>
+  <script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="d5f6aaab-22c4-4aa7-8ff2-6700cc74d784" data-blockingmode="auto" type="text/javascript"></script>
+
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-KDDHTXZL');</script>
+  <!-- End Google Tag Manager -->
+
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -69,11 +75,11 @@
       <h2 class="text-xl font-semibold mb-4">Gestión del consentimiento</h2>
       <p class="text-gray-300 mb-4">Al visitar runvato.com por primera vez se te mostrará un banner para aceptar o rechazar las cookies de analítica. Tu elección queda guardada en tu navegador.</p>
       <p class="text-gray-300 mb-6">Puedes cambiar tu preferencia en cualquier momento pulsando el botón de abajo:</p>
-      <button onclick="localStorage.removeItem('runvato_cookie_consent'); location.reload();" style="
+      <button onclick="Cookiebot.renew();" style="
         background: transparent; border: 1px solid #333; color: #aaa;
         border-radius: 6px; padding: 10px 20px; cursor: pointer;
         font-family: Lexend, sans-serif; font-size: 13px;
-      ">Restablecer mis preferencias de cookies</button>
+      ">Gestionar mis preferencias de cookies</button>
     </section>
 
     <section class="mb-10">
@@ -82,6 +88,5 @@
     </section>
   </main>
 
-  <script src="../cookie-consent.js"></script>
 </body>
 </html>
