@@ -56,8 +56,22 @@
         <li>Datos técnicos de navegación necesarios para el funcionamiento y seguridad del sitio web.</li>
         <li>Cualquier otra información que el usuario decida proporcionar voluntariamente.</li>
       </ul>
-      <p class="text-gray-300 mb-3">La aplicación Runvato registra datos de actividad física introducidos o generados por el propio usuario durante el uso de la app, como tiempos de entrenamiento, series realizadas e historial de sesiones. Estos datos se almacenan únicamente en el dispositivo del usuario (localStorage del navegador) y no se transmiten ni almacenan en ningún servidor externo. En ningún caso se recogen datos médicos ni datos biométricos.</p>
-      <p class="text-gray-300">Aunque los datos de actividad física pueden considerarse datos relacionados con la salud en el sentido del artículo 9 del RGPD, en este caso su tratamiento queda limitado al propio dispositivo del usuario, sin acceso por parte del responsable del tratamiento.</p>
+      <p class="text-gray-300 mb-3">La aplicación Runvato registra datos de actividad física introducidos o generados por el propio usuario durante el uso de la app, como tiempos de entrenamiento, series realizadas e historial de sesiones. Estos datos se almacenan en servidores externos gestionados por Supabase (proveedor de infraestructura en la nube), tal como se detalla a continuación. En ningún caso se recogen datos médicos ni datos biométricos.</p>
+      <p class="text-gray-300 mb-3">Los datos tratados por la aplicación se dividen según su ubicación de almacenamiento:</p>
+      <p class="text-gray-300 font-semibold mb-1">Almacenados en el dispositivo del usuario (navegador):</p>
+      <ul class="text-gray-300 space-y-2 list-disc list-inside mb-4">
+        <li>Sesión de autenticación activa, gestionada por el SDK de Supabase mediante el almacenamiento local del navegador.</li>
+        <li>Preferencias de consentimiento de cookies (gestionadas por Cookiebot).</li>
+        <li>Cookies de analítica de Google (únicamente si el usuario acepta su uso).</li>
+      </ul>
+      <p class="text-gray-300 font-semibold mb-1">Almacenados en servidores de Supabase (nube):</p>
+      <ul class="text-gray-300 space-y-2 list-disc list-inside mb-4">
+        <li>Datos de cuenta: dirección de correo electrónico y nombre de usuario.</li>
+        <li>Historial de entrenamientos: tiempos de caminata y carrera, número de series y fecha de cada sesión.</li>
+        <li>Configuración preferida del usuario: parámetros de entrenamiento guardados.</li>
+        <li>Foto de perfil, en caso de que el usuario decida cargarla.</li>
+      </ul>
+      <p class="text-gray-300">Aunque los datos de actividad física pueden considerarse datos relacionados con la salud en el sentido del artículo 9 del RGPD, su tratamiento se basa en el consentimiento explícito del usuario, quien decide voluntariamente registrar y almacenar dicha información al crear una cuenta y usar las funciones de la app.</p>
     </section>
 
     <section class="mb-10">
@@ -66,7 +80,7 @@
       <ul class="text-gray-300 space-y-2 list-disc list-inside">
         <li>Atender consultas o solicitudes realizadas por los usuarios.</li>
         <li>Gestionar la comunicación con los usuarios.</li>
-        <li>Permitir al usuario registrar y visualizar su historial de entrenamientos en su propio dispositivo.</li>
+        <li>Permitir al usuario crear una cuenta, registrar y visualizar su historial de entrenamientos y configuración personalizada.</li>
         <li>Garantizar el correcto funcionamiento y la seguridad del sitio web.</li>
         <li>Cumplir con las obligaciones legales aplicables.</li>
       </ul>
@@ -90,7 +104,13 @@
 
     <section class="mb-10">
       <h2 class="text-xl font-semibold mb-4">6. Destinatarios de los datos</h2>
-      <p class="text-gray-300">Los datos personales no serán cedidos a terceros salvo obligación legal o cuando sea necesario para la prestación de servicios técnicos relacionados con el funcionamiento del sitio web, como proveedores de alojamiento o mantenimiento.</p>
+      <p class="text-gray-300 mb-3">Los datos personales no serán cedidos a terceros salvo obligación legal o cuando sea necesario para la prestación de servicios técnicos relacionados con el funcionamiento del sitio web.</p>
+      <p class="text-gray-300 mb-3">La aplicación utiliza los siguientes proveedores como encargados del tratamiento, con acceso limitado a los datos necesarios para prestar sus servicios:</p>
+      <ul class="text-gray-300 space-y-2 list-disc list-inside">
+        <li><span class="text-white font-medium">Supabase, Inc.</span> — Proveedor de base de datos y almacenamiento en la nube. Almacena los datos de cuenta, historial de entrenamientos, configuración y fotos de perfil del usuario. Más información en <a href="https://supabase.com/privacy" class="text-[#D1FF00] hover:underline" target="_blank" rel="noopener">supabase.com/privacy</a>.</li>
+        <li><span class="text-white font-medium">Google LLC</span> — Proveedor de analítica web (Google Analytics / Google Tag Manager), únicamente si el usuario acepta las cookies de analítica. Más información en <a href="https://policies.google.com/privacy" class="text-[#D1FF00] hover:underline" target="_blank" rel="noopener">policies.google.com/privacy</a>.</li>
+        <li><span class="text-white font-medium">Usercentrics A/S (Cookiebot)</span> — Proveedor de gestión de consentimiento de cookies. Más información en <a href="https://www.cookiebot.com/en/privacy-policy/" class="text-[#D1FF00] hover:underline" target="_blank" rel="noopener">cookiebot.com/en/privacy-policy</a>.</li>
+      </ul>
     </section>
 
     <section class="mb-10">
