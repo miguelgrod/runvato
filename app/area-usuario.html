@@ -317,11 +317,7 @@
 
             <h1 class="text-xl font-bold tracking-wide">ÁREA DE USUARIO</h1>
 
-            <button id="logoutBtn" title="Cerrar sesión" class="opacity-50 hover:opacity-100 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24">
-                    <path stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
-                </svg>
-            </button>
+            <div class="w-6"></div>
 
         </div>
 
@@ -341,7 +337,7 @@
         <!-- TAB BAR -->
 
         <div class="tab-bar">
-            <button class="tab-btn active" data-tab="historial">Historial</button>
+            <button class="tab-btn active" data-tab="historial">Mi cuenta</button>
             <button class="tab-btn"        data-tab="personales">Datos personales</button>
             <button class="tab-btn"        data-tab="acceso">Datos de acceso</button>
         </div>
@@ -375,6 +371,8 @@
                 <div class="skeleton"></div>
                 <div class="skeleton"></div>
             </div>
+
+            <button id="logoutBtn" class="w-full mt-6 bg-red-600 hover:bg-red-700 text-white py-3 rounded-full font-bold text-sm transition-colors">Cerrar sesión</button>
 
             <div class="h-8"></div>
 
