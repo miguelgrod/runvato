@@ -156,6 +156,19 @@
     width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--card);
     display:flex;align-items:center;justify-content:center;flex-shrink:0
   }
+  .row-card.selectable{position:relative}
+  .row-card.selected{box-shadow:0 0 0 2px var(--ok), var(--shadow);background:var(--ok-soft)}
+  .row-card.selected .thumb{background:linear-gradient(135deg,#16a34a,#22c55e)}
+  .row-card.disabled{opacity:.55}
+  .row-card .pick{
+    width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;transition:all .2s
+  }
+  .row-card.selected .pick{background:var(--ok);border-color:var(--ok);color:#fff}
+  .row-card.selected .pick::after{
+    content:'';display:block;width:6px;height:11px;border-right:2px solid #fff;border-bottom:2px solid #fff;
+    transform:rotate(45deg) translate(-1px,-1px)
+  }
 
   /* calendar */
   .cal{padding:16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px}
@@ -879,7 +892,8 @@ const LS_KEY = 'plan24:v1';
 const state = {
   startDate: null,            // ISO yyyy-mm-dd, lunes de la semana 1
   done: {},                   // { "weekIdx-sessionIdx-itemIdx": true }
-  view: 'home',               // home | week | session | diet
+  diet: {},                   // { "yyyy-mm-dd": {morning, lunch, afternoon, dinner} }
+  view: 'home',               // home | week | session | diet | history
   weekIdx: 0,                 // semana visible
   sessionIdx: 0,              // sesión visible
   calMonth: null,             // {y, m} mes mostrado en el calendario
@@ -891,10 +905,35 @@ function loadState(){
     const raw = localStorage.getItem(LS_KEY);
     if(raw){ Object.assign(state, JSON.parse(raw)); }
   }catch(e){}
+  if(!state.diet) state.diet = {};
 }
 function saveState(){
-  const {startDate, done} = state;
-  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done}));
+  const {startDate, done, diet} = state;
+  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done, diet}));
+}
+
+/* ── log de comidas por día ────────────────────────────────────── */
+function dietOf(iso){ return state.diet[iso] || {}; }
+function setMeal(iso, key, value){
+  const d = {...dietOf(iso)};
+  if(d[key]===value) delete d[key]; else d[key] = value;
+  if(Object.keys(d).length===0) delete state.diet[iso];
+  else state.diet[iso] = d;
+  saveState();
+}
+function dinnerCountThisWeek(iso, dinnerIdx){
+  // cuenta cuántas veces aparece dinnerIdx en los últimos 7 días (lun-dom de esa semana)
+  const d = new Date(iso+'T00:00:00');
+  const dow = (d.getDay()+6)%7; // 0=lun
+  const monday = new Date(d); monday.setDate(d.getDate()-dow);
+  let n = 0;
+  for(let i=0;i<7;i++){
+    const day = new Date(monday); day.setDate(monday.getDate()+i);
+    const k = isoOfDate(day);
+    if(k===iso) continue; // no contamos el día actual al evaluar
+    if(state.diet[k]?.dinner===dinnerIdx) n++;
+  }
+  return n;
 }
 
 /* ════════════════════════════════════════════════════════════════
@@ -1051,6 +1090,7 @@ function render(){
   else if(state.view==='week') app.appendChild(viewWeek());
   else if(state.view==='session') app.appendChild(viewSession());
   else if(state.view==='diet') app.appendChild(viewDiet());
+  else if(state.view==='history') app.appendChild(viewHistory());
   r.appendChild(app);
   r.appendChild(viewNav());
 }
@@ -1479,46 +1519,86 @@ function viewDiet(){
     }
   }
 
-  // media mañana
-  wrap.appendChild(el('h2',{class:'h-section'},'Media mañana'));
-  const mm = el('div',{class:'card'});
+  const iso = state.dietDate;
+  const log = dietOf(iso);
+
+  // media mañana — selección de opción (radio: única)
+  wrap.appendChild(el('h2',{class:'h-section'},[
+    'Media mañana',
+    el('span',{class:'small'}, log.morning!=null?'✓ registrada':'')
+  ]));
   MORNING_SNACK.forEach((opt,i)=>{
-    mm.appendChild(el('div',{class:'ex',style:'cursor:default'},[
-      el('div',{class:'check',style:`border-color:transparent;background:var(--primary-soft);color:var(--primary);font-weight:700`}, String(i+1)),
-      el('div',{class:'text'}, opt)
+    const selected = log.morning===i;
+    wrap.appendChild(el('div',{class:'row-card selectable'+(selected?' selected':''), onclick:()=>{
+      // selección exclusiva: si pulsas la otra, cambia
+      if(log.morning===i) setMeal(iso,'morning',i); // toggle off
+      else { state.diet[iso] = {...dietOf(iso), morning:i}; saveState(); }
+      render();
+    }},[
+      el('div',{class:'thumb'}, icon('breakfast_dining','filled')),
+      el('div',{class:'body'},[
+        el('div',{class:'t'}, `Opción ${i+1}`),
+        el('div',{class:'s',style:'margin-top:4px;line-height:1.4'}, opt)
+      ]),
+      el('div',{class:'pick'})
     ]));
   });
-  wrap.appendChild(mm);
 
-  // comida del día
+  // comida del día — toggle realizada
   const lunch = LUNCH[date.getDay()];
-  wrap.appendChild(el('h2',{class:'h-section'},'Comida'));
-  wrap.appendChild(el('div',{class:'row-card',style:'cursor:default'},[
+  const lunchDone = !!log.lunch;
+  wrap.appendChild(el('h2',{class:'h-section'},[
+    'Comida',
+    el('span',{class:'small'}, lunchDone?'✓ realizada':'')
+  ]));
+  wrap.appendChild(el('div',{class:'row-card selectable'+(lunchDone?' selected':''), onclick:()=>{setMeal(iso,'lunch',true);render()}},[
     el('div',{class:'thumb warn'}, icon('restaurant','filled')),
     el('div',{class:'body'},[
       el('div',{class:'t'}, lunch.title),
       el('div',{class:'s',style:'margin-top:4px;line-height:1.4'}, lunch.desc)
-    ])
+    ]),
+    el('div',{class:'pick'})
   ]));
 
-  // cena (con restricciones)
-  wrap.appendChild(el('h2',{class:'h-section'},'Cena · elige una opción'));
-  const cenaWrap = el('div',{});
+  // cena — selección de una opción (con aviso de restricción semanal)
+  wrap.appendChild(el('h2',{class:'h-section'},[
+    'Cena · elige una opción',
+    el('span',{class:'small'}, log.dinner!=null?'✓ registrada':'')
+  ]));
   DINNERS.forEach((d,i)=>{
     const restricted = d.limit.startsWith('Máximo');
-    cenaWrap.appendChild(el('div',{class:'row-card',style:'cursor:default'},[
+    const selected = log.dinner===i;
+    const usedThisWeek = restricted ? dinnerCountThisWeek(iso, i) : 0;
+    const limitReached = restricted && usedThisWeek>=1 && !selected;
+    wrap.appendChild(el('div',{class:'row-card selectable'+(selected?' selected':'')+(limitReached?' disabled':''), onclick:()=>{
+      if(limitReached){ alert('Esta cena ya se ha tomado esta semana (máximo 1 vez/semana).'); return; }
+      if(log.dinner===i){ setMeal(iso,'dinner',i); }
+      else { state.diet[iso] = {...dietOf(iso), dinner:i}; saveState(); }
+      render();
+    }},[
       el('div',{class:'thumb '+(restricted?'purple':'ok')}, icon(restricted?'event_available':'check_circle','filled')),
       el('div',{class:'body'},[
         el('div',{class:'t'}, d.title),
-        el('div',{class:'s',style:'margin-top:4px;color:'+(restricted?'var(--purple)':'var(--ok)')}, d.limit)
-      ])
+        el('div',{class:'s',style:'margin-top:4px;color:'+(restricted?'var(--purple)':'var(--ok)')}, d.limit + (restricted&&usedThisWeek>0?` · ya tomada esta semana`:''))
+      ]),
+      el('div',{class:'pick'})
     ]));
   });
-  wrap.appendChild(cenaWrap);
 
-  // media tarde
-  wrap.appendChild(el('h2',{class:'h-section'},'Media tarde'));
-  wrap.appendChild(el('div',{class:'card', style:'color:var(--ink-2);font-size:14px'}, AFTERNOON_SNACK));
+  // media tarde — toggle realizada (opcional)
+  const afternoonDone = !!log.afternoon;
+  wrap.appendChild(el('h2',{class:'h-section'},[
+    'Media tarde',
+    el('span',{class:'small'}, afternoonDone?'✓ realizada':'opcional')
+  ]));
+  wrap.appendChild(el('div',{class:'row-card selectable'+(afternoonDone?' selected':''), onclick:()=>{setMeal(iso,'afternoon',true);render()}},[
+    el('div',{class:'thumb muted'}, icon('local_cafe','filled')),
+    el('div',{class:'body'},[
+      el('div',{class:'t'}, 'Merienda'),
+      el('div',{class:'s',style:'margin-top:4px;line-height:1.4'}, AFTERNOON_SNACK)
+    ]),
+    el('div',{class:'pick'})
+  ]));
 
   // normas fijas
   wrap.appendChild(el('h2',{class:'h-section'},'Normas fijas'));
@@ -1532,6 +1612,133 @@ function viewDiet(){
   return wrap;
 }
 
+/* ─── history view ────────────────────────────────────────────── */
+function viewHistory(){
+  const wrap = el('div',{});
+  wrap.appendChild(el('div',{class:'topbar'},[
+    el('button',{class:'back-btn', onclick:()=>{state.view='home';render()}}, icon('arrow_back')),
+    el('div',{style:'text-align:center;flex:1'},[
+      el('div',{style:'font-weight:800;letter-spacing:-.02em;font-size:18px'}, 'Historial'),
+      el('div',{class:'sub'}, 'Actividad y comidas')
+    ]),
+    el('div',{style:'width:40px'})
+  ]));
+
+  // recopilar todas las fechas relevantes (sesiones + diet)
+  const dates = new Map(); // iso -> {date, sess?, log?}
+  for(let w=0;w<PLAN.length;w++){
+    for(let s=0;s<PLAN[w].sessions.length;s++){
+      const sd = sessionDate(w,s);
+      if(!sd) continue;
+      const k = isoOfDate(sd);
+      const cur = dates.get(k) || {date:sd};
+      cur.sess = {w, s};
+      dates.set(k, cur);
+    }
+  }
+  Object.keys(state.diet).forEach(k=>{
+    const cur = dates.get(k) || {date:new Date(k+'T00:00:00')};
+    cur.log = state.diet[k];
+    dates.set(k, cur);
+  });
+
+  const today = todayDate();
+  // filtrar: solo días con actividad realizada o pasada (más útil para historial)
+  const entries = Array.from(dates.values()).filter(e=>{
+    if(e.date>today) return false;
+    if(e.sess){
+      const prog = sessionProgress(e.sess.w, e.sess.s);
+      if(prog.done>0 || e.date<=today) return true;
+    }
+    if(e.log && Object.keys(e.log).length>0) return true;
+    return e.date<=today && e.sess; // entrenamientos pasados aunque vacíos
+  });
+  entries.sort((a,b)=>b.date-a.date);
+
+  if(entries.length===0){
+    wrap.appendChild(el('div',{class:'card', style:'text-align:center;color:var(--muted);padding:32px 18px'},[
+      el('div',{},icon('history','filled')),
+      el('div',{style:'margin-top:8px'}, 'Aún no hay actividad registrada.'),
+      el('div',{class:'small', style:'margin-top:4px'}, 'Marca ejercicios o comidas y aparecerán aquí.')
+    ]));
+    return wrap;
+  }
+
+  // resumen
+  const trainDone = entries.filter(e=>e.sess && sessionProgress(e.sess.w,e.sess.s).complete).length;
+  const dietDays = entries.filter(e=>e.log && Object.keys(e.log).length>0).length;
+  const sumGrid = el('div',{class:'grid-2', style:'margin-bottom:14px'});
+  sumGrid.appendChild(stat('directions_run', String(trainDone), 'Sesiones completadas', null, 'badge-icon ok'));
+  sumGrid.appendChild(stat('restaurant', String(dietDays), 'Días con comidas', null, 'badge-icon warn'));
+  wrap.appendChild(sumGrid);
+
+  // agrupar por mes
+  let currentMonth = '';
+  entries.forEach(e=>{
+    const monthLabel = capitalize(e.date.toLocaleDateString('es-ES',{month:'long', year:'numeric'}));
+    if(monthLabel!==currentMonth){
+      wrap.appendChild(el('h2',{class:'h-section'}, monthLabel));
+      currentMonth = monthLabel;
+    }
+    wrap.appendChild(historyRow(e));
+  });
+
+  return wrap;
+}
+
+function historyRow(e){
+  const iso = isoOfDate(e.date);
+  const dateLabel = capitalize(e.date.toLocaleDateString('es-ES',{weekday:'short', day:'numeric', month:'short'}));
+  const card = el('div',{class:'card', style:'cursor:pointer', onclick:()=>{state.dietDate=iso;state.view='diet';render()}});
+
+  // header del día
+  const head = el('div',{class:'between', style:'margin-bottom:10px'},[
+    el('div',{style:'font-weight:700;letter-spacing:-.01em;font-size:15px'}, dateLabel),
+    el('div',{class:'small'}, iso)
+  ]);
+  card.appendChild(head);
+
+  // training row
+  if(e.sess){
+    const ses = PLAN[e.sess.w].sessions[e.sess.s];
+    const prog = sessionProgress(e.sess.w, e.sess.s);
+    const stateLabel = prog.complete?'Completada':prog.done>0?`${prog.done}/${prog.total} ítems`:'No realizada';
+    const stateColor = prog.complete?'var(--ok)':prog.done>0?'var(--warn)':'var(--danger)';
+    card.appendChild(el('div',{class:'row', style:'gap:10px;padding:10px 0;border-bottom:1px solid var(--line)', onclick:ev=>{ev.stopPropagation();goSession(e.sess.w,e.sess.s)}},[
+      el('div',{class:'badge-icon '+(prog.complete?'ok':'warn')}, icon(typeIcon(ses.type),'filled')),
+      el('div',{style:'flex:1;min-width:0'},[
+        el('div',{style:'font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'}, ses.title),
+        el('div',{class:'small'}, [
+          el('span',{class:'chip '+typeClass(ses.type), style:'font-size:10px;padding:3px 8px'}, ses.type),
+          ' · ', `${ses.duration} min`
+        ])
+      ]),
+      el('div',{class:'small', style:'color:'+stateColor+';font-weight:700'}, stateLabel)
+    ]));
+  }
+
+  // diet row
+  if(e.log && Object.keys(e.log).length>0){
+    const lunchDay = LUNCH[e.date.getDay()];
+    const items = [];
+    if(e.log.morning!=null) items.push(`Media mañana: opción ${e.log.morning+1}`);
+    if(e.log.lunch) items.push(`Comida: ${lunchDay.title}`);
+    if(e.log.afternoon) items.push(`Media tarde: ✓`);
+    if(e.log.dinner!=null) items.push(`Cena: ${DINNERS[e.log.dinner].title}`);
+    card.appendChild(el('div',{style:'padding-top:10px'},[
+      el('div',{class:'row',style:'gap:10px;margin-bottom:6px'},[
+        el('div',{class:'badge-icon warn'}, icon('restaurant','filled')),
+        el('div',{style:'font-weight:600;font-size:14px'}, 'Comidas registradas')
+      ]),
+      el('div',{class:'small', style:'padding-left:46px;line-height:1.6'}, items.join(' · '))
+    ]));
+  }else if(!e.sess){
+    card.appendChild(el('div',{class:'small', style:'padding:10px 0 0;color:var(--muted)'}, 'Sin registros'));
+  }
+
+  return card;
+}
+
 /* ─── bottom nav ──────────────────────────────────────────────── */
 function viewNav(){
   const nav = el('div',{class:'navbar'});
@@ -1540,18 +1747,19 @@ function viewNav(){
     {key:'home', label:'Inicio', icon:'home'},
     {key:'week', label:'Semana', icon:'view_week'},
     {key:'diet', label:'Nutrición', icon:'restaurant'},
-    {key:'settings', label:'Ajustes', icon:'settings'}
+    {key:'history', label:'Historial', icon:'history'}
   ];
   items.forEach(it=>{
     const active = (state.view==='home' && it.key==='home') ||
                    (state.view==='week' && it.key==='week') ||
                    (state.view==='session' && it.key==='week') ||
-                   (state.view==='diet' && it.key==='diet');
+                   (state.view==='diet' && it.key==='diet') ||
+                   (state.view==='history' && it.key==='history');
     inner.appendChild(el('button',{class:'nav'+(active?' active':''), onclick:()=>{
       if(it.key==='home') {state.view='home';}
       else if(it.key==='week') {state.weekIdx=activeWeekIdx();state.view='week';}
       else if(it.key==='diet') {state.dietDate=isoOfDate(todayDate());state.view='diet';}
-      else if(it.key==='settings') {openSettings();return;}
+      else if(it.key==='history') {state.view='history';}
       render();
     }},[
       icon(it.icon), el('span',{}, it.label)
