@@ -133,11 +133,16 @@
   }
   .hero h2{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.02em}
   .hero p{margin:0;font-size:13px;color:#cdd3ee;font-weight:500}
-  .hero .meta{display:flex;gap:14px;margin-top:12px;font-size:12px;color:#cdd3ee}
+  .hero .meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:12px;color:#cdd3ee}
   .hero .meta b{color:#fff;font-weight:600}
+  .hero .footer{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-top:14px;flex-wrap:wrap
+  }
   .hero .cta{
-    position:absolute;right:14px;bottom:14px;background:var(--primary);color:#fff;
-    padding:10px 18px;border-radius:99px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:4px
+    background:var(--primary);color:#fff;
+    padding:10px 18px;border-radius:99px;font-weight:700;font-size:13px;
+    display:inline-flex;align-items:center;gap:4px;flex-shrink:0;margin-left:auto
   }
 
   /* lista de tarjetas tipo "library" */
@@ -1515,12 +1520,14 @@ function viewHome(){
       el('div',{class:'tag'}, tag),
       el('h2',{}, ses.title),
       el('p',{}, `${capitalize(fmtDate(next.date))} · Semana ${next.weekIdx+1}`),
-      el('div',{class:'meta'},[
-        el('span',{},[icon('schedule'), ' ', el('b',{},`${ses.duration} min`)]),
-        el('span',{},[icon(typeIcon(ses.type)), ' ', el('b',{},ses.type)]),
-        el('span',{},[icon(locIcon(ses.location)), ' ', el('b',{},ses.location)])
-      ]),
-      el('button',{class:'cta', onclick:e=>{e.stopPropagation();goSession(next.weekIdx,next.sessionIdx)}},['Empezar ', icon('arrow_forward')])
+      el('div',{class:'footer'},[
+        el('div',{class:'meta'},[
+          el('span',{},[icon('schedule'), ' ', el('b',{},`${ses.duration} min`)]),
+          el('span',{},[icon(typeIcon(ses.type)), ' ', el('b',{},ses.type)]),
+          el('span',{},[icon(locIcon(ses.location)), ' ', el('b',{},ses.location)])
+        ]),
+        el('button',{class:'cta', onclick:e=>{e.stopPropagation();goSession(next.weekIdx,next.sessionIdx)}},['Empezar ', icon('arrow_forward')])
+      ])
     ]);
     wrap.appendChild(hero);
   }else{
