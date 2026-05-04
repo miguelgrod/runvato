@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2952f0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Plan 24">
+<title>Plan 24 · Entrenamiento personal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+  /* ─── tokens ─────────────────────────────────────────────────── */
+  :root{
+    --bg:#f3f4f7;
+    --card:#ffffff;
+    --card-2:#fafafa;
+    --ink:#0b0c10;
+    --ink-2:#3b3f49;
+    --muted:#8a8f9b;
+    --line:#ececf0;
+    --primary:#2952f0;
+    --primary-soft:#e8edff;
+    --ok:#16a34a;
+    --ok-soft:#e6f5ec;
+    --warn:#f59e0b;
+    --warn-soft:#fff4e0;
+    --danger:#ef4444;
+    --purple:#7c3aed;
+    --purple-soft:#efeaff;
+    --shadow:0 6px 24px rgba(20,20,40,.06);
+    --radius:20px;
+  }
+  /* light theme forzado — sin auto dark */
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    font-size:15px;
+    line-height:1.45;
+    min-height:100dvh;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+  .material-symbols-outlined{font-variation-settings:'FILL' 0,'wght' 500,'GRAD' 0,'opsz' 24;vertical-align:middle}
+  .filled{font-variation-settings:'FILL' 1,'wght' 600}
+
+  /* ─── layout ─────────────────────────────────────────────────── */
+  #app{max-width:520px;margin:0 auto;padding:20px 18px 110px}
+  .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+  .topbar h1{font-size:22px;font-weight:800;letter-spacing:-.02em;margin:0}
+  .topbar .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .icon-btn{
+    width:40px;height:40px;border-radius:50%;background:var(--card);
+    display:inline-flex;align-items:center;justify-content:center;box-shadow:var(--shadow);
+    transition:transform .15s ease, opacity .15s ease
+  }
+  .icon-btn:active{transform:scale(.92)}
+  .icon-btn[disabled]{opacity:.35;pointer-events:none}
+
+  /* ─── cards ─────────────────────────────────────────────────── */
+  .card{
+    background:var(--card);border-radius:var(--radius);
+    padding:18px;box-shadow:var(--shadow);margin-bottom:14px
+  }
+  .card.tight{padding:14px}
+  .row{display:flex;align-items:center;gap:12px}
+  .between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .stack{display:flex;flex-direction:column;gap:8px}
+
+  /* stats grid */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .stat{
+    background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow)
+  }
+  .stat .label{color:var(--muted);font-size:12px;font-weight:500;margin-top:6px}
+  .stat .value{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+  .stat .delta{font-size:12px;font-weight:700;color:var(--ok)}
+  .badge-icon{
+    width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
+    background:var(--primary-soft);color:var(--primary)
+  }
+  .badge-icon.ok{background:var(--ok-soft);color:var(--ok)}
+  .badge-icon.warn{background:var(--warn-soft);color:var(--warn)}
+  .badge-icon.purple{background:var(--purple-soft);color:var(--purple)}
+
+  /* progress ring */
+  .ring{position:relative;width:64px;height:64px;flex-shrink:0}
+  .ring svg{transform:rotate(-90deg)}
+  .ring .ring-num{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:14px;letter-spacing:-.01em
+  }
+
+  /* progress bar */
+  .bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+  .bar > i{display:block;height:100%;background:var(--primary);border-radius:99px;transition:width .4s ease}
+  .bar.ok > i{background:var(--ok)}
+  .bar.purple > i{background:var(--purple)}
+
+  /* pills (chips de filtro) */
+  .pills{display:flex;gap:8px;overflow-x:auto;margin:-4px -18px 14px;padding:4px 18px;scrollbar-width:none}
+  .pills::-webkit-scrollbar{display:none}
+  .pill{
+    flex-shrink:0;padding:9px 16px;border-radius:99px;background:var(--card);
+    font-size:13px;font-weight:600;color:var(--ink-2);box-shadow:var(--shadow)
+  }
+  .pill.active{background:var(--primary);color:#fff}
+
+  /* hero card (próxima sesión) */
+  .hero{
+    position:relative;border-radius:24px;overflow:hidden;color:#fff;
+    padding:18px;min-height:200px;display:flex;flex-direction:column;justify-content:flex-end;
+    background:linear-gradient(135deg,#0b1230 0%,#1f2b6a 60%,#2952f0 100%);
+    box-shadow:var(--shadow)
+  }
+  .hero .tag{
+    position:absolute;top:14px;left:14px;background:var(--primary);
+    padding:5px 10px;border-radius:8px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase
+  }
+  .hero h2{margin:0 0 4px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .hero p{margin:0;font-size:13px;color:#cdd3ee;font-weight:500}
+  .hero .meta{display:flex;gap:14px;margin-top:12px;font-size:12px;color:#cdd3ee}
+  .hero .meta b{color:#fff;font-weight:600}
+  .hero .cta{
+    position:absolute;right:14px;bottom:14px;background:var(--primary);color:#fff;
+    padding:10px 18px;border-radius:99px;font-weight:700;font-size:13px;display:inline-flex;align-items:center;gap:4px
+  }
+
+  /* lista de tarjetas tipo "library" */
+  .row-card{
+    background:var(--card);border-radius:18px;padding:12px;display:flex;align-items:center;gap:12px;
+    box-shadow:var(--shadow);margin-bottom:10px;cursor:pointer;transition:transform .15s ease
+  }
+  .row-card:active{transform:scale(.98)}
+  .row-card .thumb{
+    width:56px;height:56px;border-radius:14px;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;font-size:24px;color:#fff;
+    background:linear-gradient(135deg,#2952f0,#7c3aed)
+  }
+  .row-card .thumb.ok{background:linear-gradient(135deg,#16a34a,#22c55e)}
+  .row-card .thumb.warn{background:linear-gradient(135deg,#f59e0b,#fb923c)}
+  .row-card .thumb.purple{background:linear-gradient(135deg,#7c3aed,#a78bfa)}
+  .row-card .thumb.muted{background:linear-gradient(135deg,#6b7280,#9ca3af)}
+  .row-card .body{flex:1;min-width:0}
+  .row-card .body .t{font-weight:700;font-size:15px;letter-spacing:-.01em}
+  .row-card .body .s{font-size:12px;color:var(--muted);margin-top:2px}
+  .row-card .body .meta{display:flex;gap:10px;margin-top:6px;font-size:12px;color:var(--muted);align-items:center}
+  .row-card .body .meta .match{color:var(--primary);font-weight:600;margin-left:auto}
+  .row-card .play{
+    width:36px;height:36px;border-radius:50%;background:var(--ink);color:var(--card);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0
+  }
+
+  /* calendar */
+  .cal{padding:16px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:14px}
+  .cal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cal-head .title{font-weight:700;letter-spacing:-.01em}
+  .cal-head button{
+    width:32px;height:32px;border-radius:50%;background:var(--card-2);
+    display:inline-flex;align-items:center;justify-content:center
+  }
+  .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+  .cal-grid .dow{
+    text-align:center;font-size:11px;color:var(--muted);font-weight:600;padding:4px 0
+  }
+  .cal-day{
+    aspect-ratio:1/1;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-size:13px;font-weight:600;color:var(--ink-2);position:relative;background:transparent
+  }
+  .cal-day.out{color:var(--muted);opacity:.4}
+  .cal-day.today{background:var(--primary);color:#fff}
+  .cal-day.has{cursor:pointer;background:var(--primary-soft);color:var(--primary)}
+  .cal-day.has.done{background:var(--ok);color:#fff}
+  .cal-day.has.miss{background:#fde7e7;color:var(--danger)}
+  .cal-day.has.deload{background:var(--purple-soft);color:var(--purple)}
+  .cal-day.today.has{background:var(--primary);color:#fff}
+  .cal-day.today.has.done{background:var(--ok);color:#fff;box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ok)}
+  .cal-day.has.done .dot{background:#fff}
+  .cal-day .dot{
+    position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:currentColor
+  }
+
+  /* welcome */
+  .welcome{
+    min-height:100dvh;display:flex;flex-direction:column;justify-content:center;
+    padding:32px 22px;max-width:520px;margin:0 auto;text-align:center
+  }
+  .welcome .logo{
+    width:72px;height:72px;border-radius:24px;background:var(--primary);color:#fff;
+    display:flex;align-items:center;justify-content:center;margin:0 auto 18px;box-shadow:var(--shadow)
+  }
+  .welcome h1{font-size:30px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px}
+  .welcome p{color:var(--muted);margin:0 0 22px}
+  .welcome input[type=date]{
+    width:100%;padding:16px;border-radius:16px;border:1px solid var(--line);
+    background:var(--card);color:var(--ink);font-size:16px;font-family:inherit;margin-bottom:14px
+  }
+  .btn-primary{
+    width:100%;padding:16px 22px;background:var(--primary);color:#fff;
+    border-radius:99px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px
+  }
+  .btn-primary:disabled{opacity:.4}
+  .btn-ghost{
+    width:100%;padding:14px 22px;background:transparent;color:var(--ink-2);
+    border-radius:99px;font-weight:600;font-size:14px
+  }
+
+  /* exercise items */
+  .ex{
+    display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--card-2);
+    border-radius:14px;margin-bottom:8px;cursor:pointer;transition:background .15s ease
+  }
+  .ex:active{background:var(--line)}
+  .ex .check{
+    width:24px;height:24px;border-radius:50%;border:2px solid var(--line);flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;margin-top:1px;transition:all .2s
+  }
+  .ex.done .check{background:var(--ok);border-color:var(--ok);color:#fff}
+  .ex.done .check::after{
+    content:'';display:block;width:6px;height:11px;border-right:2px solid #fff;border-bottom:2px solid #fff;
+    transform:rotate(45deg) translate(-1px,-1px)
+  }
+  .ex .text{flex:1;font-size:14px;line-height:1.45;color:var(--ink-2)}
+  .ex.done .text{text-decoration:line-through;color:var(--muted)}
+
+  /* meta line */
+  .meta-line{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
+  .meta-line .m{display:inline-flex;align-items:center;gap:4px}
+  .meta-line .m .material-symbols-outlined{font-size:16px}
+
+  /* type chip */
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:99px;
+    font-size:11px;font-weight:700;letter-spacing:.02em;text-transform:uppercase
+  }
+  .chip.cardio{background:var(--primary-soft);color:var(--primary)}
+  .chip.fuerza{background:var(--warn-soft);color:#d97706}
+  .chip.bici{background:var(--ok-soft);color:var(--ok)}
+  .chip.marcha{background:var(--purple-soft);color:var(--purple)}
+  .chip.movilidad{background:var(--line);color:var(--ink-2)}
+  .chip.deload{background:var(--purple-soft);color:var(--purple)}
+  .chip.objetivo{background:#fff0d6;color:#b45309}
+
+  /* nota motivacional */
+  .note{
+    background:linear-gradient(135deg,var(--primary-soft),transparent);
+    border-left:3px solid var(--primary);padding:12px 14px;border-radius:12px;
+    font-size:13px;color:var(--ink-2);margin-bottom:12px
+  }
+  .note.purple{background:linear-gradient(135deg,var(--purple-soft),transparent);border-color:var(--purple)}
+  .note.warn{background:linear-gradient(135deg,#fff0d6,transparent);border-color:#d97706}
+
+  /* bottom nav */
+  .navbar{
+    position:fixed;left:0;right:0;bottom:0;background:var(--card);
+    border-top:1px solid var(--line);
+    padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:50
+  }
+  .navbar .inner{
+    max-width:520px;margin:0 auto;display:flex;justify-content:space-around;align-items:center
+  }
+  .navbar .nav{
+    display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 12px;color:var(--muted);
+    font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;flex:1
+  }
+  .navbar .nav.active{color:var(--ink)}
+  .navbar .nav.active .material-symbols-outlined{font-variation-settings:'FILL' 1,'wght' 600}
+
+  /* celebración */
+  .celebrate{
+    position:fixed;inset:0;background:rgba(11,12,16,.6);backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:center;z-index:100;
+    opacity:0;pointer-events:none;transition:opacity .25s ease
+  }
+  .celebrate.show{opacity:1;pointer-events:auto}
+  .celebrate-card{
+    background:var(--card);border-radius:24px;padding:32px 28px;text-align:center;
+    max-width:340px;width:90%;transform:scale(.9);transition:transform .3s cubic-bezier(.34,1.56,.64,1)
+  }
+  .celebrate.show .celebrate-card{transform:scale(1)}
+  .celebrate-card .emoji{font-size:64px;margin-bottom:8px;animation:pop .5s ease}
+  .celebrate-card h3{margin:0 0 6px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .celebrate-card p{margin:0 0 18px;color:var(--muted);font-size:14px}
+  @keyframes pop{0%{transform:scale(0)}60%{transform:scale(1.3)}100%{transform:scale(1)}}
+
+  /* views */
+  .view{animation:fadeIn .25s ease}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  /* small */
+  .small{font-size:12px;color:var(--muted)}
+  .h-section{font-size:16px;font-weight:800;letter-spacing:-.01em;margin:18px 0 10px;display:flex;align-items:center;justify-content:space-between}
+  .h-section .link{font-size:13px;color:var(--primary);font-weight:600}
+  .back-btn{
+    width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--shadow);
+    display:inline-flex;align-items:center;justify-content:center
+  }
+</style>
+</head>
+<body>
+
+<div id="root"></div>
+
+<div id="celebrate" class="celebrate">
+  <div class="celebrate-card">
+    <div class="emoji" id="celebrate-emoji">🎉</div>
+    <h3 id="celebrate-title">¡Sesión completada!</h3>
+    <p id="celebrate-text">Buen trabajo, sigue así.</p>
+    <button class="btn-primary" onclick="hideCelebrate()">Continuar</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════════
+   PLAN DE 24 SEMANAS
+   Cada semana: { phase, label, isDeload?, isObjective?, isTaper?, sessions:[…] }
+   Cada sesión:  { day:'Tue|Thu|Sat|Sun', type, location, duration, title, items[], note? }
+   ════════════════════════════════════════════════════════════════ */
+const PLAN = [
+  // ─── FASE 1 — Base y adaptación ───
+  {phase:1, label:'Base y adaptación', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:30,title:'Marcha + trote',items:[
+      '5 min calentamiento caminando',
+      '4 min marcha rápida / 1 min trote suave × 5 series',
+      '5 min vuelta a la calma',
+      'Ritmo trote: ~8:00–9:00 min/km (muy cómodo, zona 2)'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:45,title:'Circuito básico',items:[
+      'Sentadilla con peso corporal 3×12',
+      'Zancada alternada 3×10 cada pierna',
+      'Push-up inclinado (manos en banco) 3×10',
+      'Plancha isométrica 3×20 seg',
+      'Glute bridge 3×15'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:60,title:'Rodada suave',items:[
+      '5 min calentamiento pedaleando suave',
+      '45–50 min en llano a ritmo Z2 (puedes hablar con frases enteras)',
+      'Cadencia cómoda 70–80 rpm',
+      '5 min enfriamiento',
+      'Llevar agua (0,5 L mínimo)'
+    ]}
+  ]},
+  {phase:1, label:'Base y adaptación', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:35,title:'Intervalos 3/2',items:[
+      '5 min calentamiento marchando',
+      '3 min trote / 2 min marcha × 6 series',
+      '5 min enfriamiento caminando',
+      'Mismo ritmo que semana 1, no aceleres'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Circuito + tirón',items:[
+      'Sentadilla goblet con kettlebell o mancuerna 3×12',
+      'Zancada alternada 3×12',
+      'Remo en máquina o TRX invertido 3×12',
+      'Push-up inclinado 3×12',
+      'Glute bridge con peso 3×15',
+      'Plancha 3×25 seg'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:60,title:'60 min Z2',items:[
+      '60 min constantes a Z2',
+      'Cadencia 75–80 rpm',
+      'Buscar ruta con algo de desnivel suave',
+      'Agua + fruta opcional a mitad'
+    ]}
+  ]},
+  {phase:1, label:'Base y adaptación', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:40,title:'4/1 progresivo',items:[
+      '5 min marcha de calentamiento',
+      '4 min trote / 1 min marcha × 7 series',
+      'Ritmo trote: ~7:30 min/km',
+      '5 min enfriamiento'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:55,title:'Circuito con carga',items:[
+      'Sentadilla goblet 4×12 (aumenta peso respecto sem 2)',
+      'Hip thrust con barra o mancuerna 4×12',
+      'Press de banca o máquina de pecho 3×12',
+      'Jalón al pecho en polea 3×12',
+      'Plancha lateral 3×20 seg cada lado',
+      'Dead bug 3×10 cada lado'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:70,title:'Progresión Z2 → Z3',items:[
+      '60 min Z2 estable',
+      'Últimos 10 min a Z3 (frases cortas al hablar)',
+      'Llevar agua + gel o barrita para practicar'
+    ]}
+  ]},
+  {phase:1, label:'Base y adaptación', isDeload:true, sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:30,title:'Cardio suave',note:'Semana de deload — el cuerpo asimila el trabajo de las 3 anteriores. No fuerces.',items:[
+      '30 min marcha rápida o trote muy suave',
+      'Si corres: 3 min trote / 2 min marcha × 4 series',
+      'Ritmo el más suave posible'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:35,title:'Fuerza ligera (deload)',items:[
+      'Mismos ejercicios semanas anteriores pero solo 2 series',
+      'Reduce el peso un 30–40%',
+      'Foco en técnica y amplitud de movimiento',
+      '10 min de estiramientos al final'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:45,title:'Bici muy suave',items:[
+      '45 min a ritmo de paseo Z1',
+      'Sin subidas, terreno llano',
+      'Disfrutar sin reloj ni datos'
+    ]}
+  ]},
+
+  // ─── FASE 2 — Construcción ───
+  {phase:2, label:'Construcción', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:45,title:'10 min continuo',items:[
+      '5 min marcha calentamiento',
+      '10 min trote continuo (7:30–8:00 min/km)',
+      '5 min marcha recuperación',
+      '10 min trote continuo (segundo bloque)',
+      '5 min marcha + estiramientos'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:55,title:'Empuje + tirón',items:[
+      'Press banca con barra o mancuernas 4×10',
+      'Jalón al pecho agarre ancho 4×10',
+      'Peso muerto rumano con mancuernas 3×12',
+      'Press de hombro sentado 3×10',
+      'Curl de bíceps 3×12',
+      'Extensión de tríceps en polea 3×12',
+      'Plancha 3×30 seg'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:90,title:'Fondo medio',note:'Primer hito: 90 minutos en silla.',items:[
+      '90 min completos a Z2',
+      'Incluir alguna subida suave',
+      'Agua + barrita o plátano a los 45 min'
+    ]}
+  ]},
+  {phase:2, label:'Construcción', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:45,title:'15 min continuo',items:[
+      '5 min marcha calentamiento',
+      '15 min trote continuo (7:30 min/km)',
+      '5 min marcha recuperación',
+      '10 min trote continuo',
+      '5 min marcha + estiramientos'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:55,title:'Empuje + tirón +5%',items:[
+      'Mismos ejercicios semana 5 con +5% de carga',
+      'Face pull en polea 3×15',
+      'Rotación externa de hombro con banda 3×15',
+      'Sentadilla búlgara 3×8 cada pierna'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:90,title:'Fondo + ritmo',items:[
+      '70 min a Z2',
+      '20 min finales a Z3',
+      'Nota cómo gestionas el cambio de intensidad'
+    ]}
+  ]},
+  {phase:2, label:'Construcción', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:50,title:'20 min continuo',items:[
+      '5 min marcha calentamiento',
+      '20 min trote continuo sin parar',
+      'Ritmo: 7:00–7:30 min/km',
+      '10 min marcha recuperación',
+      '10 min trote opcional si te encuentras bien'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:60,title:'Full body intenso',items:[
+      'Sentadilla con barra 4×8 (empieza con barra vacía si es la primera vez)',
+      'Press banca 4×8',
+      'Remo con barra o mancuerna 4×8',
+      'Peso muerto convencional 3×8',
+      'Press de hombro 3×10',
+      'Plancha 3×40 seg'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:120,title:'2 horas',items:[
+      '2 horas completas a Z2',
+      'Agua + 2 barritas o geles (uno a la hora)',
+      'Probar el equipo que usarás en tiradas largas'
+    ]}
+  ]},
+  {phase:2, label:'Construcción', isDeload:true, sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:30,title:'Trote suave',note:'Deload — descarga estructural. La adaptación ocurre ahora.',items:[
+      '30 min sin objetivos de ritmo',
+      'Alterna trote y marcha libremente'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:40,title:'Fuerza reducida (deload)',items:[
+      '2 series de cada ejercicio (no 4)',
+      'Peso reducido 30%',
+      '15 min movilidad de cadera y tobillo al final'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:60,title:'Bici suave',items:[
+      '60 min Z1–Z2 (muy cómodo)',
+      'Sin subidas, terreno llano'
+    ]}
+  ]},
+
+  // ─── FASE 3 — Objetivos ───
+  {phase:3, label:'Objetivos', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:45,title:'3 km al ritmo objetivo',items:[
+      '10 min calentamiento (marcha + drills: skipping, talones al glúteo, zancada)',
+      '3 km exactos a 6:30 min/km',
+      '10 min marcha vuelta a la calma',
+      'Anotar sensaciones del ritmo objetivo'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:45,title:'Mantenimiento',items:[
+      'Sentadilla 3×10 (mismo peso que semana 7)',
+      'Press banca 3×10',
+      'Jalón al pecho 3×10',
+      'Hip thrust 3×12',
+      'Plancha 3×40 seg',
+      'Dead bug 3×10 cada lado',
+      'Bird-dog 3×10 cada lado'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:135,title:'2h 15 min',items:[
+      '135 min a Z2 estable',
+      'Nutrición: agua + carbohidratos cada 45 min',
+      'Anotar sensaciones al final'
+    ]}
+  ]},
+  {phase:3, label:'Objetivos', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:50,title:'4 km',items:[
+      '10 min calentamiento',
+      '4 km a 6:30–7:00 min/km sin parar',
+      'Si te cansas: baja el ritmo, no pares',
+      '10 min vuelta a la calma + estiramientos'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:45,title:'Fuerza + core específico',items:[
+      'Full body 3×10 (mismos ejercicios fase 3)',
+      'Pallof press en polea 3×12 cada lado',
+      'Bird-dog 3×10 cada lado (lento y controlado)',
+      'Plancha con toque de hombro 3×10 cada lado',
+      'Side plank 3×30 seg cada lado'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:150,title:'2h 30 min',items:[
+      'Z2 constante toda la sesión',
+      'Gel o barrita cada 45–50 min',
+      '500 ml agua por hora mínimo'
+    ]}
+  ]},
+  {phase:3, label:'Objetivos', sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:55,title:'5 km',items:[
+      '10 min calentamiento con drills',
+      '5 km continuos a 6:30 min/km',
+      'Visualizar el km 6 de la semana siguiente',
+      '10 min enfriamiento y estiramientos'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:40,title:'Fuerza ligera',items:[
+      'Full body 2×10 (volumen reducido)',
+      'Movilidad: cadera, tobillo, hombro 15 min',
+      'Foam roller piernas al final'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:165,title:'2h 45 min',items:[
+      'Entrenamiento largo más exigente del plan hasta ahora',
+      'Planificar ruta y nutrición con antelación',
+      'Ensayo general para las 3 horas de la semana siguiente'
+    ]}
+  ]},
+  {phase:3, label:'Objetivos', isObjective:true, sessions:[
+    {day:'Tue',type:'Cardio',location:'Aire libre',duration:60,title:'OBJETIVO: 6 km a 6:30/km',note:'🎯 Primer gran objetivo del plan. Disfrútalo.',items:[
+      'Elegir ruta bonita para la ocasión',
+      '10 min calentamiento cuidadoso',
+      '6 km exactos a 6:30 min/km sin parar',
+      'Guardar el registro (Strava, reloj, foto)',
+      '10 min enfriamiento + celebración'
+    ]},
+    {day:'Thu',type:'Movilidad',location:'Gimnasio',duration:30,title:'Movilidad y descanso activo',items:[
+      'Estiramientos cadena posterior 10 min',
+      'Foam roller piernas completo 10 min',
+      'Movilidad cadera y tobillo 10 min'
+    ]},
+    {day:'Sat',type:'Bici',location:'Exterior',duration:180,title:'OBJETIVO: 3 horas en bici',note:'🎯 Tres horas seguidas. Es un hito.',items:[
+      'Planificar ruta motivadora',
+      'Nutrición cada 45 min desde el minuto 0',
+      'Z2 durante todo el tiempo',
+      'Guardar el recuerdo: foto, Strava, segmento'
+    ]}
+  ]},
+
+  // ─── FASE 4 — Puente Camino ───
+  {phase:4, label:'Puente Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:60,title:'Marcha con mochila — 60 min',items:[
+      'Mochila 4–5 kg (usar la del Camino)',
+      'Paso energético, no paseo',
+      'Buscar algo de cuesta si es posible',
+      'Anotar puntos de presión del calzado'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Énfasis en pierna',items:[
+      'Sentadilla 4×10',
+      'Zancada con mancuernas 3×12',
+      'Step-up en cajón o banco 3×12 cada pierna',
+      'Elevación de gemelos de pie 3×20',
+      'Peso muerto rumano 3×10',
+      'Core: plancha + bird-dog 3×10'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:120,title:'Marcha larga — 2h con mochila',items:[
+      'Mochila 5 kg',
+      'Incluir subidas y bajadas',
+      'Hidratación: 500 ml por hora',
+      'Observar qué roza o duele para corregir'
+    ]}
+  ]},
+  {phase:4, label:'Puente Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:75,title:'Marcha con mochila — 75 min',items:[
+      'Mochila 6 kg',
+      'Ritmo sostenido en todo el recorrido',
+      'Incluir tramos de subida intencionalmente',
+      'Practicar paso largo, no de paseo'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Pierna + gemelos',items:[
+      'Mismos ejercicios semana 13 con +5% de peso',
+      'Sentadilla búlgara 3×10 cada pierna',
+      'Gemelo en escalón con carga 3×20'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:150,title:'Marcha — 2h 30 min',items:[
+      'Mochila 6 kg',
+      'Aproximadamente 14–16 km',
+      'Practicar paradas de nutrición cada hora'
+    ]}
+  ]},
+  {phase:4, label:'Puente Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:90,title:'Marcha con mochila — 90 min',items:[
+      'Mochila 7 kg',
+      'Tramo largo sin parar',
+      'Simular el desayuno previo como en el Camino'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:40,title:'Fuerza mantenimiento',items:[
+      '2–3 series por ejercicio, peso moderado',
+      'Priorizar recuperación para el largo del fin de semana'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:300,title:'Etapa simulada — 20 km',note:'Primera etapa completa de práctica.',items:[
+      'Salir de madrugada como en el Camino real',
+      'Mochila 7 kg',
+      'Nutrición cada hora',
+      'Descansar en casa con piernas en alto al llegar'
+    ]}
+  ]},
+  {phase:4, label:'Puente Camino', isDeload:true, sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:45,title:'Marcha suave — 45 min',note:'Deload antes del bloque específico Camino.',items:[
+      'Sin mochila o con 2–3 kg máximo',
+      'Ritmo de paseo, disfrutar'
+    ]},
+    {day:'Thu',type:'Movilidad',location:'Gimnasio',duration:40,title:'Movilidad completa',items:[
+      'Estiramientos cadena posterior 20 min',
+      'Foam roller piernas y espalda',
+      'Yoga o movilidad articular general'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Aire libre',duration:90,title:'Marcha corta de revisión',items:[
+      'Mochila con el peso final del Camino',
+      'Confirmar que todo el equipo está ajustado',
+      'Última revisión del calzado antes del bloque específico'
+    ]}
+  ]},
+
+  // ─── FASE 5 — Específico Camino ───
+  {phase:5, label:'Específico Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Exterior',duration:70,title:'Marcha con mochila — 70 min',items:[
+      'Mochila 7 kg',
+      'Ritmo sostenido sin prisa'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Pierna + core',items:[
+      'Sentadilla 3×10',
+      'Zancada 3×12',
+      'Step-up 3×12 cada pierna',
+      'Gemelo con carga 3×20',
+      'Core: plancha + bird-dog 10 min'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:300,title:'Etapa 1 — 20 km',items:[
+      'Salir temprano (simular Camino real)',
+      'Mochila 7–8 kg',
+      'Nutrición cada hora sin falta',
+      'Al llegar: comer, estirar, piernas en alto'
+    ]},
+    {day:'Sun',type:'Marcha',location:'Exterior',duration:240,title:'Etapa 2 — 15 km (piernas cargadas)',note:'El entrenamiento más específico del plan: día consecutivo.',items:[
+      'Salir con las piernas del día anterior cargadas',
+      'Bajar el ritmo es normal y correcto',
+      'Anotar cómo responde el cuerpo al día consecutivo'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Exterior',duration:70,title:'Marcha con mochila — 70 min',items:[
+      'Mochila 8 kg',
+      'Aumenta el peso respecto a semana 17'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Pierna + core',items:[
+      'Mismos ejercicios semana 17',
+      'Mantener el peso, no aumentar'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:300,title:'Etapa 1 — 20 km',items:[
+      'Mochila 8 kg',
+      'Misma dinámica que semana 17 sábado'
+    ]},
+    {day:'Sun',type:'Marcha',location:'Exterior',duration:240,title:'Etapa 2 — 15 km',items:[
+      'Consolida el patrón de días consecutivos',
+      'Gestión de fatiga acumulada'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', isObjective:true, sessions:[
+    {day:'Tue',type:'Marcha',location:'Exterior',duration:80,title:'Marcha con mochila — 80 min',items:[
+      'Mochila 8 kg',
+      'Incluir desnivel pronunciado'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:45,title:'Fuerza mantenimiento',items:[
+      '2–3 series, peso constante sin subir',
+      'Priorizar recuperación para el fin de semana'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:330,title:'Etapa 1 — 22 km',note:'🎯 Distancia real de una etapa del Camino.',items:[
+      'Mochila 8 kg, salir al amanecer',
+      'Nutrición y gestión de tiempo como en el Camino real'
+    ]},
+    {day:'Sun',type:'Marcha',location:'Exterior',duration:270,title:'Etapa 2 — 18 km',note:'El entrenamiento más duro del plan completo.',items:[
+      'Empezar despacio',
+      'Anotar todo: sensaciones, ampollas, zonas de fricción'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Exterior',duration:80,title:'Marcha con mochila — 80 min',items:[
+      'Mochila 8 kg',
+      'Consolidación de volumen máximo'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:40,title:'Fuerza mantenimiento',items:[
+      '2 series por ejercicio',
+      'Foam roller + estiramientos al final'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:330,title:'Etapa 1 — 22 km',items:[
+      'Repetir el volumen máximo de semana 19',
+      'Confirmar que el cuerpo ya lo gestiona bien'
+    ]},
+    {day:'Sun',type:'Marcha',location:'Exterior',duration:270,title:'Etapa 2 — 18 km',items:[
+      'Segundo ciclo de volumen máximo',
+      'Si hay algún problema de equipo, corregirlo esta semana'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', isDeload:true, sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:45,title:'Marcha suave — 45 min',note:'Deload final antes del Camino.',items:[
+      'Sin mochila o máximo 3 kg',
+      'Paso tranquilo, descanso activo'
+    ]},
+    {day:'Thu',type:'Movilidad',location:'Gimnasio',duration:40,title:'Movilidad total',items:[
+      'Foam roller cuerpo completo',
+      'Estiramientos largos y profundos',
+      'Preparar mentalmente el sprint final'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:120,title:'Caminata suave — 10 km',items:[
+      'Muy suave, sin mochila o muy ligera',
+      'Disfrutar el movimiento sin esfuerzo'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Exterior',duration:60,title:'Marcha con mochila — 60 min',items:[
+      'Mochila con el peso exacto que llevarás al Camino',
+      'Confirmar que todo el equipo está a punto'
+    ]},
+    {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:40,title:'Fuerza ligera + movilidad',items:[
+      'Rutina corta de pierna 2×10',
+      'Estiramientos generales 20 min'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:240,title:'Ensayo final — 15 km',note:'Último entrenamiento largo antes del Camino.',items:[
+      'Mochila definitiva, ropa definitiva',
+      'Salir a la misma hora que en el Camino'
+    ]},
+    {day:'Sun',type:'Marcha',location:'Exterior',duration:120,title:'Marcha suave — 8 km (opcional)',items:[
+      'Solo si el cuerpo lo pide',
+      'Muy suave, escuchar al cuerpo'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:50,title:'Marcha suave — 50 min',items:[
+      'Mochila ligera 3–4 kg',
+      'Volumen reduciéndose, calidad sobre cantidad'
+    ]},
+    {day:'Thu',type:'Movilidad',location:'Aire libre',duration:35,title:'Movilidad y estiramientos',items:[
+      'Estiramientos completos',
+      'Preparación mental para el Camino'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Exterior',duration:120,title:'Marcha corta — 10 km',items:[
+      'Mantenimiento, nada exigente',
+      'Confirmar que el equipo está perfecto'
+    ]}
+  ]},
+  {phase:5, label:'Específico Camino', isTaper:true, sessions:[
+    {day:'Tue',type:'Marcha',location:'Aire libre',duration:30,title:'Marcha muy suave — 30 min',note:'🏁 Tapering — la semana que viene empieza el Camino.',items:[
+      'Sin mochila',
+      'Paseo activo, no entrenamiento'
+    ]},
+    {day:'Thu',type:'Movilidad',location:'Aire libre',duration:30,title:'Movilidad suave',items:[
+      'Solo estiramientos y foam roller',
+      'No añadir ningún esfuerzo nuevo'
+    ]},
+    {day:'Sat',type:'Marcha',location:'Aire libre',duration:20,title:'Descanso activo o paseo — 20 min',items:[
+      'El cuerpo está listo',
+      'Preparar la mochila definitiva para el Camino'
+    ]}
+  ]}
+];
+
+/* ════════════════════════════════════════════════════════════════
+   PLAN DE ALIMENTACIÓN
+   Diseñado por nutricionista colegiada (Nº AS00062).
+   ════════════════════════════════════════════════════════════════ */
+const DIET_DISCLAIMER = 'El menú está elaborado por una nutricionista colegiada (Nº AS00062) y adaptado a los días de entrenamiento. Sigue siempre las indicaciones de tu profesional de referencia.';
+
+// Lunch rotación 7 días, indexado por Date.getDay() (0=Dom, 1=Lun…)
+const LUNCH = [
+  {title:'Parrillada de verduras + pescado azul', desc:'Tomate, champiñones, espárragos, calabacín, berenjena con pescado azul.'},
+  {title:'Arroz con verduras + pollo', desc:'Judías verdes, pimientos, zanahoria, cebolla, puerro + pollo. Ensalada de tomate.'},
+  {title:'Arroz de coliflor + bacalao', desc:'Arroz de coliflor con ajitos + bacalao con patata cocida.'},
+  {title:'Alubias estofadas con verduras', desc:'Alubias con verduras + ensalada de tomate.'},
+  {title:'Pasta + bonito', desc:'Pasta con bonito, salsa de tomate triturado y verduras.'},
+  {title:'Garbanzos estofados', desc:'Garbanzos estofados con verduras o garbanzos en ensalada.'},
+  {title:'Lomo + arroz', desc:'Lomo a la plancha con pimientos y calabacín + arroz.'}
+];
+
+const MORNING_SNACK = [
+  '1 kiwi o 1 naranja + pan integral (40–60 g) + 40–60 g jamón sin tocino',
+  '2–3 tortitas de arroz/maíz + 1 cucharada crema de cacahuete + 1 plátano + canela de Ceilán'
+];
+
+const AFTERNOON_SNACK = '1 pieza de fruta + 2–3 nueces (opcional, solo si hay hambre real)';
+
+const DINNERS = [
+  {title:'Pescado blanco + pimientos asados', limit:'Libre cualquier día'},
+  {title:'Puré de verduras + tortilla 1 huevo + atún', limit:'Máximo 1 vez por semana'},
+  {title:'Pollo + champiñones', limit:'Libre cualquier día'},
+  {title:'Tortilla de patata cocida + ensalada de tomate', limit:'Máximo 1 vez por semana'},
+  {title:'Lasaña de berenjena + tomate + calabacín a la plancha + jamón york y queso', limit:'Máximo 1 vez por semana'}
+];
+
+const FIXED_RULES = [
+  'AOVE: 3 cucharadas soperas/día repartidas entre comida y cena',
+  '½ aguacate sustituye a 1 cucharada de aceite (no se suma)',
+  'Máximo 1 plátano al día',
+  'Postre comida: 1 pieza de fruta',
+  'Postre cena: yogur natural o queso batido 0% + frambuesas o fresas'
+];
+
+// Tipo de día y nota asociada
+function dayKind(date){
+  const sess = sessionAt(date);
+  if(!sess) return {kind:'rest'};
+  const w = sess.weekIdx, s = sess.sessionIdx;
+  const ses = PLAN[w].sessions[s];
+  if(ses.day==='Sun') return {kind:'double', w, s, ses};
+  if((ses.type==='Bici' && ses.duration>=90) || (ses.type==='Marcha' && ses.duration>=120)) return {kind:'long', w, s, ses};
+  return {kind:'normal', w, s, ses};
+}
+
+const DAY_KIND_INFO = {
+  rest:    {label:'Día de descanso', icon:'self_improvement', color:'muted', note:'Día de descanso. Sigue el menú normal, sin añadidos extra.'},
+  normal:  {label:'Entreno normal',  icon:'directions_run',   color:'primary', note:'Entrenas hoy a las 7h. Toma la media mañana antes de salir si puedes, o nada más llegar. El menú del día te da todo lo que necesitas.'},
+  long:    {label:'Tirada larga',    icon:'directions_bike',  color:'warn',    note:'Hoy toca tirada larga. Desayuna antes de salir y come algo cada 45 min durante el entrenamiento.'},
+  double:  {label:'Etapa doble',     icon:'hiking',           color:'purple',  note:'Segundo día consecutivo de marcha. Come bien aunque no tengas mucha hambre. El cuerpo lo necesita para recuperar.'}
+};
+
+const LONG_TRAINING_FUEL = [
+  'Desayuno 45–60 min antes de salir: media mañana opción 1 o 2 + café con leche',
+  'Durante: cada 45–50 min, barrita / plátano / 4–5 dátiles / gel + 500 ml agua/hora',
+  'Comida del día: ración algo más generosa',
+  'Postre comida obligatorio (no saltarse la fruta)'
+];
+const DOUBLE_DAY_FUEL = [
+  'Comida con más cantidad de arroz o patata de lo habitual',
+  'No saltarse ninguna comida ni el postre',
+  'Hidratación: mínimo 3 L durante todo el día'
+];
+const NORMAL_TRAINING_FUEL = [
+  'Antes de salir (opcional, si hay hambre): café solo o con leche',
+  '+ 1 pieza de fruta pequeña, o nada si el cuerpo no lo pide'
+];
+
+// Notas nutricionales por semana (0-indexed)
+function weekDietNote(w){
+  if([3,7,15,20].includes(w)) return {kind:'deload', text:'Semana de descarga de entrenamiento. El menú no cambia: come igual de bien aunque entrenes menos.'};
+  if(w===11) return {kind:'objective', text:'Esta semana vas a por los dos grandes objetivos. No reduzcas carbohidratos. El día antes de cada entreno toma la comida completa con su ración de arroz o pasta.'};
+  if(w===18 || w===19) return {kind:'volume', text:'Las semanas más exigentes del plan. No recortes porciones. Si tienes más hambre de lo habitual, es normal: escucha al cuerpo.'};
+  if(w===23) return {kind:'taper', text:'Última semana antes del Camino. Hidratación máxima. Sigue el menú normal, sin cambios. El cuerpo ya está listo.'};
+  return null;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ESTADO Y PERSISTENCIA
+   ════════════════════════════════════════════════════════════════ */
+const LS_KEY = 'plan24:v1';
+const state = {
+  startDate: null,            // ISO yyyy-mm-dd, lunes de la semana 1
+  done: {},                   // { "weekIdx-sessionIdx-itemIdx": true }
+  view: 'home',               // home | week | session | diet
+  weekIdx: 0,                 // semana visible
+  sessionIdx: 0,              // sesión visible
+  calMonth: null,             // {y, m} mes mostrado en el calendario
+  dietDate: null              // ISO yyyy-mm-dd para la vista de nutrición
+};
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){ Object.assign(state, JSON.parse(raw)); }
+  }catch(e){}
+}
+function saveState(){
+  const {startDate, done} = state;
+  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done}));
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CÁLCULOS DE FECHA ↔ SESIÓN
+   ════════════════════════════════════════════════════════════════ */
+const DAY_OFFSET = {Tue:1, Thu:3, Sat:5, Sun:6}; // desde lunes (0)
+
+function startMonday(){
+  if(!state.startDate) return null;
+  return new Date(state.startDate + 'T00:00:00');
+}
+function sessionDate(weekIdx, sessionIdx){
+  const start = startMonday(); if(!start) return null;
+  const session = PLAN[weekIdx].sessions[sessionIdx];
+  const d = new Date(start);
+  d.setDate(d.getDate() + weekIdx*7 + DAY_OFFSET[session.day]);
+  return d;
+}
+function isoOfDate(d){
+  return d.toISOString().slice(0,10);
+}
+function sameDay(a,b){
+  return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+}
+function todayDate(){
+  const d=new Date(); d.setHours(0,0,0,0); return d;
+}
+// devuelve {weekIdx, sessionIdx} si en esa fecha hay sesión
+function sessionAt(date){
+  for(let w=0;w<PLAN.length;w++){
+    for(let s=0;s<PLAN[w].sessions.length;s++){
+      const sd = sessionDate(w,s);
+      if(sd && sameDay(sd, date)) return {weekIdx:w, sessionIdx:s};
+    }
+  }
+  return null;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   ESTADO DE SESIONES (completada / pendiente)
+   ════════════════════════════════════════════════════════════════ */
+function isItemDone(w,s,i){ return !!state.done[`${w}-${s}-${i}`]; }
+function toggleItem(w,s,i){
+  const k = `${w}-${s}-${i}`;
+  if(state.done[k]) delete state.done[k]; else state.done[k] = true;
+  saveState();
+}
+function sessionProgress(w,s){
+  const items = PLAN[w].sessions[s].items;
+  const done = items.reduce((n,_,i)=>n+(isItemDone(w,s,i)?1:0),0);
+  return {done, total:items.length, complete: done===items.length};
+}
+function weekProgress(w){
+  const total = PLAN[w].sessions.length;
+  let done = 0;
+  for(let s=0;s<total;s++) if(sessionProgress(w,s).complete) done++;
+  return {done,total,complete:done===total};
+}
+function totalSessions(){
+  return PLAN.reduce((n,w)=>n+w.sessions.length,0);
+}
+function totalDone(){
+  let n=0;
+  for(let w=0;w<PLAN.length;w++) for(let s=0;s<PLAN[w].sessions.length;s++) if(sessionProgress(w,s).complete) n++;
+  return n;
+}
+function phaseProgress(phase){
+  let total=0, done=0;
+  for(let w=0;w<PLAN.length;w++){
+    if(PLAN[w].phase!==phase) continue;
+    for(let s=0;s<PLAN[w].sessions.length;s++){
+      total++;
+      if(sessionProgress(w,s).complete) done++;
+    }
+  }
+  return {done,total};
+}
+function activeWeekIdx(){
+  // primera semana sin todas las sesiones completas; si todas, la última
+  for(let w=0;w<PLAN.length;w++) if(!weekProgress(w).complete) return w;
+  return PLAN.length-1;
+}
+function nextSession(){
+  const today = todayDate();
+  for(let w=0;w<PLAN.length;w++){
+    for(let s=0;s<PLAN[w].sessions.length;s++){
+      if(sessionProgress(w,s).complete) continue;
+      const sd = sessionDate(w,s);
+      if(!sd) continue;
+      if(sd >= today) return {weekIdx:w, sessionIdx:s, date:sd};
+    }
+  }
+  // si no hay futura, devolver la primera pendiente (puede ser pasada)
+  for(let w=0;w<PLAN.length;w++){
+    for(let s=0;s<PLAN[w].sessions.length;s++){
+      if(!sessionProgress(w,s).complete) return {weekIdx:w, sessionIdx:s, date:sessionDate(w,s)};
+    }
+  }
+  return null;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RENDER — utilidades
+   ════════════════════════════════════════════════════════════════ */
+const $ = sel => document.querySelector(sel);
+const root = ()=>document.getElementById('root');
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  for(const k in attrs){
+    const v = attrs[k];
+    if(v===false || v==null) continue; // ignora atributos falsy (evita disabled="false")
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else if(k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v===true ? '' : v);
+  }
+  (Array.isArray(children)?children:[children]).forEach(c=>{
+    if(c==null) return;
+    e.appendChild(typeof c==='string' ? document.createTextNode(c) : c);
+  });
+  return e;
+}
+function icon(name, cls=''){ return el('span',{class:'material-symbols-outlined '+cls}, name); }
+function fmtDate(d){
+  if(!d) return '';
+  return d.toLocaleDateString('es-ES',{weekday:'long', day:'numeric', month:'short'});
+}
+function fmtMonth(y,m){
+  return new Date(y,m,1).toLocaleDateString('es-ES',{month:'long', year:'numeric'});
+}
+function typeClass(t){
+  return ({Cardio:'cardio',Fuerza:'fuerza',Bici:'bici',Marcha:'marcha',Movilidad:'movilidad'})[t] || 'cardio';
+}
+function locIcon(l){
+  return ({'Aire libre':'park','Gimnasio':'fitness_center','Exterior':'terrain'})[l] || 'place';
+}
+function typeIcon(t){
+  return ({Cardio:'directions_run',Fuerza:'fitness_center',Bici:'directions_bike',Marcha:'hiking',Movilidad:'self_improvement'})[t]||'sports';
+}
+
+/* ════════════════════════════════════════════════════════════════
+   RENDER — vistas
+   ════════════════════════════════════════════════════════════════ */
+function render(){
+  const r = root();
+  r.innerHTML = '';
+  if(!state.startDate){ r.appendChild(viewWelcome()); return; }
+  const app = el('div',{id:'app',class:'view'});
+  if(state.view==='home') app.appendChild(viewHome());
+  else if(state.view==='week') app.appendChild(viewWeek());
+  else if(state.view==='session') app.appendChild(viewSession());
+  else if(state.view==='diet') app.appendChild(viewDiet());
+  r.appendChild(app);
+  r.appendChild(viewNav());
+}
+
+/* ─── welcome ─────────────────────────────────────────────────── */
+function viewWelcome(){
+  let val = '';
+  // por defecto: lunes de esta semana
+  const today = new Date();
+  const dow = (today.getDay()+6)%7; // 0=lunes
+  const monday = new Date(today); monday.setDate(today.getDate()-dow);
+  val = isoOfDate(monday);
+
+  const wrap = el('div',{class:'welcome'});
+  wrap.append(
+    el('div',{class:'logo'}, icon('directions_run','filled')),
+    el('h1',{},'Plan 24'),
+    el('p',{},'Tu plan personal de 24 semanas. Configura cuándo empieza la semana 1 (idealmente un lunes).'),
+    el('input',{type:'date', value:val, oninput:e=>{val=e.target.value; btn.disabled=!val}}),
+    (function(){
+      const btn = el('button',{class:'btn-primary', onclick:()=>{
+        if(!val) return;
+        state.startDate = val;
+        saveState();
+        render();
+      }}, ['Empezar el plan', icon('arrow_forward')]);
+      window._welcomeBtn = btn;
+      return btn;
+    })()
+  );
+  return wrap;
+}
+
+/* ─── home ────────────────────────────────────────────────────── */
+function viewHome(){
+  const wrap = el('div',{});
+  const aw = activeWeekIdx();
+  const tot = totalSessions(), done = totalDone();
+  const pct = Math.round(done/tot*100);
+  const wp = weekProgress(aw);
+  const phase = PLAN[aw].phase;
+  const pp = phaseProgress(phase);
+
+  // topbar
+  wrap.appendChild(el('div',{class:'topbar'},[
+    el('div',{},[
+      el('h1',{},`Hola, atleta`),
+      el('div',{class:'sub'},`Semana ${aw+1} · ${PLAN[aw].label}${PLAN[aw].isDeload?' · Deload':''}${PLAN[aw].isTaper?' · Tapering':''}`)
+    ]),
+    el('button',{class:'icon-btn', title:'Ajustes', onclick:openSettings}, icon('settings'))
+  ]));
+
+  // stats grid (estilo screenshot)
+  const grid = el('div',{class:'grid-2', style:'margin-bottom:14px'});
+  grid.appendChild(stat('directions_run', `${done}/${tot}`, 'Sesiones totales', `${pct}%`, 'badge-icon'));
+  grid.appendChild(stat('local_fire_department', `${wp.done}/${wp.total}`, 'Esta semana', null, 'badge-icon warn'));
+  wrap.appendChild(grid);
+
+  const grid2 = el('div',{class:'grid-2'});
+  grid2.appendChild(stat('flag', `Fase ${phase}`, PLAN[aw].label, `${pp.done}/${pp.total}`, 'badge-icon purple'));
+  grid2.appendChild(stat('event_available', `${aw+1}/24`, 'Semanas', null, 'badge-icon ok'));
+  wrap.appendChild(grid2);
+
+  // próxima sesión hero
+  wrap.appendChild(el('h2',{class:'h-section'},'Próxima sesión'));
+  const next = nextSession();
+  if(next){
+    const ses = PLAN[next.weekIdx].sessions[next.sessionIdx];
+    const tag = PLAN[next.weekIdx].isObjective ? 'OBJETIVO' :
+                PLAN[next.weekIdx].isDeload ? 'DELOAD' :
+                PLAN[next.weekIdx].isTaper ? 'TAPERING' : 'PRÓXIMA';
+    const hero = el('div',{class:'hero', onclick:()=>goSession(next.weekIdx, next.sessionIdx)},[
+      el('div',{class:'tag'}, tag),
+      el('h2',{}, ses.title),
+      el('p',{}, `${capitalize(fmtDate(next.date))} · Semana ${next.weekIdx+1}`),
+      el('div',{class:'meta'},[
+        el('span',{},[icon('schedule'), ' ', el('b',{},`${ses.duration} min`)]),
+        el('span',{},[icon(typeIcon(ses.type)), ' ', el('b',{},ses.type)]),
+        el('span',{},[icon(locIcon(ses.location)), ' ', el('b',{},ses.location)])
+      ]),
+      el('button',{class:'cta', onclick:e=>{e.stopPropagation();goSession(next.weekIdx,next.sessionIdx)}},['Empezar ', icon('arrow_forward')])
+    ]);
+    wrap.appendChild(hero);
+  }else{
+    wrap.appendChild(el('div',{class:'card'},'¡Plan completado! 🎉'));
+  }
+
+  // acceso rápido a nutrición
+  wrap.appendChild(el('div',{class:'row-card', style:'margin-top:6px', onclick:()=>{state.dietDate=isoOfDate(todayDate());state.view='diet';render()}},[
+    el('div',{class:'thumb warn'}, icon('restaurant','filled')),
+    el('div',{class:'body'},[
+      el('div',{class:'t'}, 'Qué comer hoy'),
+      el('div',{class:'s'}, (function(){
+        const k = dayKind(todayDate()).kind;
+        return ({rest:'Día de descanso · menú normal',normal:'Día de entreno · menú adaptado',long:'Tirada larga · nutrición específica',double:'Etapa doble · más recuperación'})[k];
+      })())
+    ]),
+    el('div',{class:'play'}, icon('arrow_forward','filled'))
+  ]));
+
+  // calendar
+  wrap.appendChild(el('h2',{class:'h-section'},'Calendario'));
+  wrap.appendChild(viewCalendar());
+
+  // progreso por barras
+  wrap.appendChild(el('h2',{class:'h-section'},'Progreso'));
+  const barsCard = el('div',{class:'card'});
+  barsCard.appendChild(progressRow('Plan global', done, tot, 'primary'));
+  barsCard.appendChild(progressRow('Semana actual', wp.done, wp.total, 'ok'));
+  barsCard.appendChild(progressRow(`Fase ${phase} — ${PLAN[aw].label}`, pp.done, pp.total, 'purple'));
+  wrap.appendChild(barsCard);
+
+  // sesiones de la semana activa (estilo "library")
+  wrap.appendChild(el('h2',{class:'h-section'},[`Semana ${aw+1}`, el('span',{class:'link', onclick:()=>{state.weekIdx=aw;state.view='week';render()}},'Ver todas')]));
+  PLAN[aw].sessions.forEach((s, sIdx)=>{
+    wrap.appendChild(sessionRow(aw, sIdx));
+  });
+
+  return wrap;
+}
+
+function stat(iconName, value, label, delta, badgeClass){
+  const card = el('div',{class:'stat'});
+  const head = el('div',{class:'between'},[
+    el('div',{class:badgeClass}, icon(iconName,'filled')),
+    delta? el('div',{class:'delta'}, delta) : null
+  ]);
+  card.append(head, el('div',{class:'value'}, value), el('div',{class:'label'}, label));
+  return card;
+}
+
+function progressRow(label, done, total, kind){
+  const pct = total? Math.round(done/total*100):0;
+  return el('div',{style:'margin-bottom:14px'},[
+    el('div',{class:'between', style:'margin-bottom:6px'},[
+      el('div',{style:'font-weight:600;font-size:13px'}, label),
+      el('div',{class:'small'}, `${done}/${total} · ${pct}%`)
+    ]),
+    el('div',{class:'bar '+kind},[el('i',{style:`width:${pct}%`})])
+  ]);
+}
+
+function sessionRow(w, s){
+  const ses = PLAN[w].sessions[s];
+  const prog = sessionProgress(w,s);
+  const sd = sessionDate(w,s);
+  const today = todayDate();
+  const past = sd && sd < today;
+  let thumbCls = 'thumb';
+  if(prog.complete) thumbCls += ' ok';
+  else if(PLAN[w].isDeload) thumbCls += ' purple';
+  else if(past) thumbCls += ' warn';
+
+  return el('div',{class:'row-card', onclick:()=>goSession(w,s)},[
+    el('div',{class:thumbCls}, icon(typeIcon(ses.type),'filled')),
+    el('div',{class:'body'},[
+      el('div',{class:'t'}, ses.title),
+      el('div',{class:'s'}, [el('span',{class:'chip '+typeClass(ses.type)}, ses.type), ' ', sd?capitalize(fmtDate(sd)):'']),
+      el('div',{class:'meta'},[
+        el('span',{},[icon('schedule'), ' ', `${ses.duration}m`]),
+        el('span',{},[icon(locIcon(ses.location)), ' ', ses.location]),
+        el('span',{class:'match'}, prog.complete?'Completada':`${prog.done}/${prog.total}`)
+      ])
+    ]),
+    el('div',{class:'play'}, icon(prog.complete?'check':'play_arrow','filled'))
+  ]);
+}
+
+/* ─── calendar ────────────────────────────────────────────────── */
+function viewCalendar(){
+  if(!state.calMonth){
+    const t = todayDate();
+    state.calMonth = {y:t.getFullYear(), m:t.getMonth()};
+  }
+  const {y,m} = state.calMonth;
+  const wrap = el('div',{class:'cal'});
+  wrap.appendChild(el('div',{class:'cal-head'},[
+    el('button',{onclick:()=>{state.calMonth={y:m===0?y-1:y, m:m===0?11:m-1}; render()}}, icon('chevron_left')),
+    el('div',{class:'title'}, capitalize(fmtMonth(y,m))),
+    el('button',{onclick:()=>{state.calMonth={y:m===11?y+1:y, m:m===11?0:m+1}; render()}}, icon('chevron_right'))
+  ]));
+  const grid = el('div',{class:'cal-grid'});
+  ['L','M','X','J','V','S','D'].forEach(d=>grid.appendChild(el('div',{class:'dow'}, d)));
+
+  // primer día de la cuadrícula (lunes anterior)
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay()+6)%7; // 0=lunes
+  const start = new Date(first); start.setDate(first.getDate()-offset);
+
+  const today = todayDate();
+  for(let i=0;i<42;i++){
+    const d = new Date(start); d.setDate(start.getDate()+i);
+    const inMonth = d.getMonth()===m;
+    const isToday = sameDay(d, today);
+    const sess = sessionAt(d);
+    let cls = 'cal-day';
+    if(!inMonth) cls += ' out';
+    if(isToday) cls += ' today';
+    if(sess){
+      cls += ' has';
+      const prog = sessionProgress(sess.weekIdx, sess.sessionIdx);
+      if(prog.complete) cls += ' done';
+      else if(d < today) cls += ' miss';
+      else if(PLAN[sess.weekIdx].isDeload) cls += ' deload';
+    }
+    const cell = el('div',{class:cls,
+      onclick: sess?()=>goSession(sess.weekIdx, sess.sessionIdx):null
+    }, String(d.getDate()));
+    if(sess) cell.appendChild(el('div',{class:'dot'}));
+    grid.appendChild(cell);
+  }
+  wrap.appendChild(grid);
+
+  // leyenda
+  wrap.appendChild(el('div',{class:'small', style:'display:flex;gap:14px;flex-wrap:wrap;margin-top:12px'},[
+    legendDot('var(--primary)', 'Pendiente'),
+    legendDot('var(--ok)', 'Completada'),
+    legendDot('var(--danger)', 'No realizada'),
+    legendDot('var(--purple)', 'Deload')
+  ]));
+
+  return wrap;
+}
+function legendDot(color, label){
+  return el('span',{style:'display:inline-flex;align-items:center;gap:6px'},[
+    el('span',{style:`width:8px;height:8px;border-radius:50%;background:${color};display:inline-block`}),
+    label
+  ]);
+}
+
+/* ─── week view ───────────────────────────────────────────────── */
+function viewWeek(){
+  const w = state.weekIdx;
+  const week = PLAN[w];
+  const aw = activeWeekIdx();
+  const wp = weekProgress(w);
+  const wrap = el('div',{});
+
+  // topbar
+  wrap.appendChild(el('div',{class:'topbar'},[
+    el('button',{class:'back-btn', onclick:()=>{state.view='home';render()}}, icon('arrow_back')),
+    el('div',{style:'text-align:center;flex:1'},[
+      el('div',{style:'font-weight:800;letter-spacing:-.02em;font-size:16px'}, `Semana ${w+1} de 24`),
+      el('div',{class:'sub'}, week.label)
+    ]),
+    el('div',{style:'width:40px'})
+  ]));
+
+  // navegación entre semanas
+  const sd0 = sessionDate(w,0);
+  const sdEnd = sessionDate(w, PLAN[w].sessions.length-1);
+  const rangeLabel = sd0 && sdEnd
+    ? `${sd0.getDate()}–${sdEnd.getDate()} ${capitalize(sd0.toLocaleDateString('es-ES',{month:'short'}))}`
+    : '';
+  wrap.appendChild(el('div',{class:'between', style:'margin-bottom:14px;gap:8px'},[
+    el('button',{class:'icon-btn', disabled:w===0, onclick:()=>{if(w>0){state.weekIdx=w-1;render()}}}, icon('chevron_left')),
+    el('div',{style:'flex:1;text-align:center'},[
+      el('div',{class:'small',style:'font-weight:700;color:var(--ink-2)'}, w===aw?'⬤ Semana activa':rangeLabel),
+      w!==aw && rangeLabel ? el('div',{class:'small'}, `Semana ${w+1}`) : null
+    ]),
+    el('button',{class:'icon-btn', disabled:w===PLAN.length-1, onclick:()=>{if(w<PLAN.length-1){state.weekIdx=w+1;render()}}}, icon('chevron_right'))
+  ]));
+
+  // notas semana
+  if(week.isDeload) wrap.appendChild(el('div',{class:'note purple'},[el('strong',{},'Semana de deload. '), 'Reduce el volumen y la carga. La adaptación ocurre en el descanso.']));
+  if(week.isObjective) wrap.appendChild(el('div',{class:'note warn'},[el('strong',{},'🎯 Semana de objetivos. '), 'Hito clave del plan. Disfrútalo y registra el resultado.']));
+  if(week.isTaper) wrap.appendChild(el('div',{class:'note'},[el('strong',{},'🏁 Tapering. '), 'Volumen mínimo para llegar fresco al Camino.']));
+
+  // progreso semana
+  wrap.appendChild(el('div',{class:'card'},[
+    progressRow('Sesiones de la semana', wp.done, wp.total, wp.complete?'ok':'primary')
+  ]));
+
+  // sesiones
+  week.sessions.forEach((s, sIdx)=>{
+    wrap.appendChild(sessionRow(w, sIdx));
+  });
+
+  return wrap;
+}
+
+/* ─── session view ────────────────────────────────────────────── */
+function viewSession(){
+  const w = state.weekIdx, s = state.sessionIdx;
+  const ses = PLAN[w].sessions[s];
+  const sd = sessionDate(w,s);
+  const wrap = el('div',{});
+
+  wrap.appendChild(el('div',{class:'topbar'},[
+    el('button',{class:'back-btn', onclick:()=>{state.view='week';render()}}, icon('arrow_back')),
+    el('div',{style:'text-align:center;flex:1'},[
+      el('div',{style:'font-weight:800;letter-spacing:-.02em;font-size:16px'}, `Semana ${w+1} · ${ses.day==='Sun'?'Domingo':ses.day==='Sat'?'Sábado':ses.day==='Thu'?'Jueves':'Martes'}`),
+      el('div',{class:'sub'}, sd?capitalize(fmtDate(sd)):'')
+    ]),
+    el('div',{style:'width:40px'})
+  ]));
+
+  // hero info de la sesión
+  const hero = el('div',{class:'card'},[
+    el('div',{style:'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px'},[
+      el('span',{class:'chip '+typeClass(ses.type)}, ses.type),
+      PLAN[w].isDeload? el('span',{class:'chip deload'},'Deload'):null,
+      PLAN[w].isObjective? el('span',{class:'chip objetivo'},'Objetivo'):null
+    ]),
+    el('div',{style:'font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px'}, ses.title),
+    el('div',{class:'meta-line'},[
+      el('span',{class:'m'},[icon('schedule'), `${ses.duration} min`]),
+      el('span',{class:'m'},[icon(locIcon(ses.location)), ses.location]),
+      el('span',{class:'m'},[icon(typeIcon(ses.type)), ses.type])
+    ])
+  ]);
+  wrap.appendChild(hero);
+
+  if(ses.note){
+    wrap.appendChild(el('div',{class:'note '+(PLAN[w].isObjective?'warn':PLAN[w].isDeload?'purple':'')}, ses.note));
+  }
+
+  // acceso al menú nutricional del día
+  if(sd){
+    wrap.appendChild(el('div',{class:'row-card', onclick:()=>{state.dietDate=isoOfDate(sd);state.view='diet';render()}},[
+      el('div',{class:'thumb warn'}, icon('restaurant','filled')),
+      el('div',{class:'body'},[
+        el('div',{class:'t'}, 'Qué comer hoy'),
+        el('div',{class:'s'}, 'Menú nutricionista adaptado a esta sesión')
+      ]),
+      el('div',{class:'play'}, icon('arrow_forward','filled'))
+    ]));
+  }
+
+  // checklist
+  const list = el('div',{class:'card'});
+  list.appendChild(el('div',{class:'h-section', style:'margin-top:0'}, 'Checklist'));
+  ses.items.forEach((txt, i)=>{
+    const done = isItemDone(w,s,i);
+    list.appendChild(el('div',{class:'ex'+(done?' done':''), onclick:()=>{
+      const wasComplete = sessionProgress(w,s).complete;
+      toggleItem(w,s,i);
+      const nowComplete = sessionProgress(w,s).complete;
+      render();
+      if(!wasComplete && nowComplete) onSessionComplete(w,s);
+    }},[
+      el('div',{class:'check'}),
+      el('div',{class:'text'}, txt)
+    ]));
+  });
+  wrap.appendChild(list);
+
+  // progreso de la sesión
+  const prog = sessionProgress(w,s);
+  wrap.appendChild(el('div',{class:'card'},[
+    progressRow('Progreso de la sesión', prog.done, prog.total, prog.complete?'ok':'primary')
+  ]));
+
+  return wrap;
+}
+
+/* ─── nutrition view ──────────────────────────────────────────── */
+function viewDiet(){
+  if(!state.dietDate) state.dietDate = isoOfDate(todayDate());
+  const date = new Date(state.dietDate + 'T00:00:00');
+  const wrap = el('div',{});
+
+  // topbar
+  wrap.appendChild(el('div',{class:'topbar'},[
+    el('button',{class:'back-btn', onclick:()=>{state.view='home';render()}}, icon('arrow_back')),
+    el('div',{style:'text-align:center;flex:1'},[
+      el('div',{style:'font-weight:800;letter-spacing:-.02em;font-size:18px'}, 'Nutrición'),
+      el('div',{class:'sub'}, 'Plan adaptado al entreno')
+    ]),
+    el('div',{style:'width:40px'})
+  ]));
+
+  // date navigator
+  wrap.appendChild(el('div',{class:'between', style:'margin-bottom:14px;gap:8px'},[
+    el('button',{class:'icon-btn', onclick:()=>{const d=new Date(date);d.setDate(d.getDate()-1);state.dietDate=isoOfDate(d);render()}}, icon('chevron_left')),
+    el('div',{style:'flex:1;text-align:center;font-weight:700;font-size:14px;letter-spacing:-.01em'}, capitalize(fmtDate(date))),
+    el('button',{class:'icon-btn', onclick:()=>{const d=new Date(date);d.setDate(d.getDate()+1);state.dietDate=isoOfDate(d);render()}}, icon('chevron_right'))
+  ]));
+
+  // disclaimer
+  wrap.appendChild(el('div',{class:'note'},[
+    el('strong',{},'Nutricionista colegiada (Nº AS00062). '), DIET_DISCLAIMER.split('. ').slice(1).join('. ')
+  ]));
+
+  // tipo de día y nota
+  const kind = dayKind(date);
+  const info = DAY_KIND_INFO[kind.kind];
+  const sess = kind.ses;
+  const sessWeekIdx = kind.w;
+
+  // bloque de adaptación destacado
+  const adapt = el('div',{class:'card'});
+  adapt.appendChild(el('div',{class:'between', style:'margin-bottom:10px'},[
+    el('div',{class:'row',style:'gap:10px'},[
+      el('div',{class:'badge-icon '+(info.color==='warn'?'warn':info.color==='purple'?'purple':info.color==='primary'?'':'ok'), style:info.color==='muted'?'background:var(--line);color:var(--ink-2)':''}, icon(info.icon,'filled')),
+      el('div',{},[
+        el('div',{style:'font-weight:800;letter-spacing:-.01em'}, info.label),
+        sess ? el('div',{class:'small'}, `${sess.title} · ${sess.duration} min`) : el('div',{class:'small'}, 'Hoy no entrenas')
+      ])
+    ]),
+    sess ? el('span',{class:'chip '+typeClass(sess.type)}, sess.type) : null
+  ]));
+  adapt.appendChild(el('div',{class:'note '+(kind.kind==='long'?'warn':kind.kind==='double'?'purple':kind.kind==='rest'?'':''), style:'margin-bottom:0'}, info.note));
+
+  // pautas específicas según el tipo de día
+  let fuelList = null;
+  if(kind.kind==='normal') fuelList = NORMAL_TRAINING_FUEL;
+  else if(kind.kind==='long') fuelList = LONG_TRAINING_FUEL;
+  else if(kind.kind==='double') fuelList = DOUBLE_DAY_FUEL;
+  if(fuelList){
+    const ul = el('div',{style:'margin-top:12px'});
+    ul.appendChild(el('div',{class:'h-section',style:'margin:0 0 8px;font-size:14px'}, kind.kind==='long'?'Antes / durante el entreno':kind.kind==='double'?'Recuperación entre etapas':'Antes de salir a entrenar'));
+    fuelList.forEach(t=>ul.appendChild(el('div',{class:'ex',style:'cursor:default'},[el('div',{class:'check',style:'border-color:transparent;background:var(--primary);color:#fff'},[icon('bolt','filled')]), el('div',{class:'text'}, t)])));
+    adapt.appendChild(ul);
+  }
+  wrap.appendChild(adapt);
+
+  // nota especial de la semana (si aplica)
+  if(sessWeekIdx!=null){
+    const note = weekDietNote(sessWeekIdx);
+    if(note){
+      const cls = note.kind==='objective'?'warn':note.kind==='deload'||note.kind==='taper'?'purple':'';
+      wrap.appendChild(el('div',{class:'note '+cls},[
+        el('strong',{},`Semana ${sessWeekIdx+1}: `), note.text
+      ]));
+    }
+  }
+
+  // media mañana
+  wrap.appendChild(el('h2',{class:'h-section'},'Media mañana'));
+  const mm = el('div',{class:'card'});
+  MORNING_SNACK.forEach((opt,i)=>{
+    mm.appendChild(el('div',{class:'ex',style:'cursor:default'},[
+      el('div',{class:'check',style:`border-color:transparent;background:var(--primary-soft);color:var(--primary);font-weight:700`}, String(i+1)),
+      el('div',{class:'text'}, opt)
+    ]));
+  });
+  wrap.appendChild(mm);
+
+  // comida del día
+  const lunch = LUNCH[date.getDay()];
+  wrap.appendChild(el('h2',{class:'h-section'},'Comida'));
+  wrap.appendChild(el('div',{class:'row-card',style:'cursor:default'},[
+    el('div',{class:'thumb warn'}, icon('restaurant','filled')),
+    el('div',{class:'body'},[
+      el('div',{class:'t'}, lunch.title),
+      el('div',{class:'s',style:'margin-top:4px;line-height:1.4'}, lunch.desc)
+    ])
+  ]));
+
+  // cena (con restricciones)
+  wrap.appendChild(el('h2',{class:'h-section'},'Cena · elige una opción'));
+  const cenaWrap = el('div',{});
+  DINNERS.forEach((d,i)=>{
+    const restricted = d.limit.startsWith('Máximo');
+    cenaWrap.appendChild(el('div',{class:'row-card',style:'cursor:default'},[
+      el('div',{class:'thumb '+(restricted?'purple':'ok')}, icon(restricted?'event_available':'check_circle','filled')),
+      el('div',{class:'body'},[
+        el('div',{class:'t'}, d.title),
+        el('div',{class:'s',style:'margin-top:4px;color:'+(restricted?'var(--purple)':'var(--ok)')}, d.limit)
+      ])
+    ]));
+  });
+  wrap.appendChild(cenaWrap);
+
+  // media tarde
+  wrap.appendChild(el('h2',{class:'h-section'},'Media tarde'));
+  wrap.appendChild(el('div',{class:'card', style:'color:var(--ink-2);font-size:14px'}, AFTERNOON_SNACK));
+
+  // normas fijas
+  wrap.appendChild(el('h2',{class:'h-section'},'Normas fijas'));
+  const rules = el('div',{class:'card'});
+  FIXED_RULES.forEach(r=>rules.appendChild(el('div',{class:'ex',style:'cursor:default'},[
+    el('div',{class:'check',style:'border-color:transparent;background:var(--ok-soft);color:var(--ok)'}, icon('check','filled')),
+    el('div',{class:'text'}, r)
+  ])));
+  wrap.appendChild(rules);
+
+  return wrap;
+}
+
+/* ─── bottom nav ──────────────────────────────────────────────── */
+function viewNav(){
+  const nav = el('div',{class:'navbar'});
+  const inner = el('div',{class:'inner'});
+  const items = [
+    {key:'home', label:'Inicio', icon:'home'},
+    {key:'week', label:'Semana', icon:'view_week'},
+    {key:'diet', label:'Nutrición', icon:'restaurant'},
+    {key:'settings', label:'Ajustes', icon:'settings'}
+  ];
+  items.forEach(it=>{
+    const active = (state.view==='home' && it.key==='home') ||
+                   (state.view==='week' && it.key==='week') ||
+                   (state.view==='session' && it.key==='week') ||
+                   (state.view==='diet' && it.key==='diet');
+    inner.appendChild(el('button',{class:'nav'+(active?' active':''), onclick:()=>{
+      if(it.key==='home') {state.view='home';}
+      else if(it.key==='week') {state.weekIdx=activeWeekIdx();state.view='week';}
+      else if(it.key==='diet') {state.dietDate=isoOfDate(todayDate());state.view='diet';}
+      else if(it.key==='settings') {openSettings();return;}
+      render();
+    }},[
+      icon(it.icon), el('span',{}, it.label)
+    ]));
+  });
+  nav.appendChild(inner);
+  return nav;
+}
+
+/* ─── settings ────────────────────────────────────────────────── */
+function openSettings(){
+  const cur = state.startDate || '';
+  const v = prompt('Fecha de inicio del plan (YYYY-MM-DD).\nDeja vacío y pulsa OK para borrar todo el progreso.', cur);
+  if(v===null) return;
+  if(v.trim()===''){
+    if(confirm('¿Borrar todo el progreso y reiniciar?')){
+      state.startDate=null; state.done={}; state.view='home'; saveState(); render();
+    }
+    return;
+  }
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ alert('Formato no válido. Usa YYYY-MM-DD.'); return; }
+  state.startDate = v; saveState(); render();
+}
+
+/* ─── navegación ──────────────────────────────────────────────── */
+function goSession(w, s){
+  state.weekIdx = w;
+  state.sessionIdx = s;
+  state.view = 'session';
+  render();
+}
+
+/* ─── celebración ─────────────────────────────────────────────── */
+function showCelebrate(emoji, title, text){
+  $('#celebrate-emoji').textContent = emoji;
+  $('#celebrate-title').textContent = title;
+  $('#celebrate-text').textContent = text;
+  $('#celebrate').classList.add('show');
+}
+function hideCelebrate(){ $('#celebrate').classList.remove('show'); }
+
+function onSessionComplete(w, s){
+  // celebración por sesión, semana o plan
+  const wp = weekProgress(w);
+  const totDone = totalDone();
+  const totAll = totalSessions();
+  setTimeout(()=>{
+    if(totDone===totAll){
+      showCelebrate('🏆','¡Plan completado!','24 semanas. Estás listo para el Camino.');
+    }else if(wp.complete){
+      const week = PLAN[w];
+      if(week.isObjective) showCelebrate('🎯','¡Objetivo cumplido!','Has completado una semana clave del plan.');
+      else if(week.isDeload) showCelebrate('🌿','Deload completado','Cuerpo recuperado, listo para la siguiente fase.');
+      else if(week.isTaper) showCelebrate('🏁','Tapering completo','Mañana empieza el Camino. Estás listo.');
+      else showCelebrate('🔥', `Semana ${w+1} completa`, '3 de 3 sesiones. Adelante con la siguiente.');
+    }else{
+      showCelebrate('✅','Sesión completada', `${wp.done} de ${wp.total} esta semana.`);
+    }
+  }, 80);
+}
+
+/* ─── utils ───────────────────────────────────────────────────── */
+function capitalize(s){ return s ? s[0].toUpperCase()+s.slice(1) : s; }
+
+/* ─── boot ────────────────────────────────────────────────────── */
+loadState();
+render();
+</script>
+</body>
+</html>
