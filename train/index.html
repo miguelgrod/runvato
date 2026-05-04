@@ -1540,7 +1540,6 @@ function viewHome(){
                 PLAN[next.weekIdx].isDeload ? 'DELOAD' :
                 PLAN[next.weekIdx].isTaper ? 'TAPERING' : 'PRÓXIMA';
     const hero = el('div',{class:'hero', onclick:()=>goSession(next.weekIdx, next.sessionIdx)},[
-      el('div',{class:'tag'}, tag),
       el('h2',{}, ses.title),
       el('p',{}, `${capitalize(fmtDate(next.date))} · Semana ${next.weekIdx+1}`),
       el('div',{class:'footer'},[
