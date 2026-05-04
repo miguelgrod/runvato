@@ -6,8 +6,8 @@
 <meta name="theme-color" content="#2952f0">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Plan 24">
-<title>Plan 24 · Entrenamiento personal</title>
+<meta name="apple-mobile-web-app-title" content="Reto 2026">
+<title>Reto 2026 · Plan de entrenamiento</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -197,6 +197,23 @@
   .cal-day.has.done .dot{background:#fff}
   .cal-day .dot{
     position:absolute;bottom:5px;width:4px;height:4px;border-radius:50%;background:currentColor
+  }
+
+  /* quote card */
+  .quote-card{
+    position:relative;background:linear-gradient(135deg,#0b1230 0%,#1f2b6a 60%,#2952f0 100%);
+    color:#fff;border-radius:20px;padding:20px 22px 18px 26px;margin-bottom:14px;
+    box-shadow:var(--shadow);overflow:hidden
+  }
+  .quote-card .quote-mark{
+    position:absolute;top:-14px;left:14px;font-size:80px;opacity:.18;font-weight:800;
+    font-family:Georgia,serif;line-height:1
+  }
+  .quote-card .quote-text{
+    font-size:15px;font-weight:600;line-height:1.45;letter-spacing:-.01em;position:relative
+  }
+  .quote-card .quote-author{
+    margin-top:8px;font-size:12px;color:#cdd3ee;font-weight:500
   }
 
   /* welcome */
@@ -803,6 +820,50 @@ const PLAN = [
 ];
 
 /* ════════════════════════════════════════════════════════════════
+   FRASES MOTIVACIONALES (1 por día, rotación determinista)
+   ════════════════════════════════════════════════════════════════ */
+const QUOTES = [
+  {text:'No tienes que ser rápido. Solo tienes que empezar.', author:'Reto 2026'},
+  {text:'El cuerpo logra lo que la mente cree.', author:'Napoleon Hill'},
+  {text:'Cada paso te acerca a tu mejor versión.', author:'Reto 2026'},
+  {text:'La disciplina pesa kilos, el arrepentimiento pesa toneladas.', author:'Jim Rohn'},
+  {text:'Lo importante no es lo rápido que avances, sino que no te detengas.', author:'Confucio'},
+  {text:'Hoy es un día perfecto para hacer las cosas un poco mejor que ayer.', author:'Reto 2026'},
+  {text:'El éxito es la suma de pequeños esfuerzos repetidos día tras día.', author:'Robert Collier'},
+  {text:'Que la duda nunca pueda más que tus ganas.', author:'Reto 2026'},
+  {text:'No se trata de ser el mejor. Se trata de ser mejor que ayer.', author:'Anónimo'},
+  {text:'Las metas se conquistan paso a paso, sin prisa pero sin pausa.', author:'Reto 2026'},
+  {text:'La constancia vence lo que la dicha no alcanza.', author:'Simón Bolívar'},
+  {text:'Empieza donde estás, usa lo que tienes, haz lo que puedas.', author:'Arthur Ashe'},
+  {text:'El dolor que sientes hoy será la fuerza que sentirás mañana.', author:'Anónimo'},
+  {text:'No cuentes los días, haz que los días cuenten.', author:'Muhammad Ali'},
+  {text:'Las excusas no queman calorías.', author:'Anónimo'},
+  {text:'No has llegado hasta aquí para llegar solo hasta aquí.', author:'Reto 2026'},
+  {text:'Cuando creas que no puedes más, recuerda por qué empezaste.', author:'Anónimo'},
+  {text:'Los grandes logros requieren grandes sacrificios y constancia.', author:'Reto 2026'},
+  {text:'La fuerza no viene de lo que puedes hacer, sino de superar lo que creías que no podías.', author:'Rikki Rogers'},
+  {text:'Si no te reta, no te cambia.', author:'Fred DeVito'},
+  {text:'El único entreno malo es el que no se hace.', author:'Anónimo'},
+  {text:'No esperes el momento perfecto: hazlo y haz que sea perfecto.', author:'Reto 2026'},
+  {text:'La diferencia entre lo imposible y lo posible está en la determinación.', author:'Tommy Lasorda'},
+  {text:'Sudar hoy es brillar mañana.', author:'Anónimo'},
+  {text:'La motivación te empieza, el hábito te lleva al final.', author:'Jim Ryun'},
+  {text:'No pares cuando estés cansado. Para cuando hayas terminado.', author:'David Goggins'},
+  {text:'El cuerpo va donde la mente lo lleva.', author:'Reto 2026'},
+  {text:'Cada kilómetro que corres es un kilómetro más cerca del Camino.', author:'Reto 2026'},
+  {text:'Los maratones se ganan en los entrenamientos, no en la línea de meta.', author:'Anónimo'},
+  {text:'Lo que cuenta no es el tamaño del paso, sino la dirección.', author:'Reto 2026'},
+  {text:'Tu único competidor es la persona que fuiste ayer.', author:'Anónimo'}
+];
+
+function quoteOfTheDay(date){
+  const d = date || todayDate();
+  // hash determinista a partir del año-mes-día
+  const seed = d.getFullYear()*10000 + (d.getMonth()+1)*100 + d.getDate();
+  return QUOTES[seed % QUOTES.length];
+}
+
+/* ════════════════════════════════════════════════════════════════
    PLAN DE ALIMENTACIÓN
    Diseñado por nutricionista colegiada (Nº AS00062).
    ════════════════════════════════════════════════════════════════ */
@@ -1107,8 +1168,8 @@ function viewWelcome(){
   const wrap = el('div',{class:'welcome'});
   wrap.append(
     el('div',{class:'logo'}, icon('directions_run','filled')),
-    el('h1',{},'Plan 24'),
-    el('p',{},'Tu plan personal de 24 semanas. Configura cuándo empieza la semana 1 (idealmente un lunes).'),
+    el('h1',{},'Reto 2026'),
+    el('p',{},'Hola Miguel. Tu plan personal de 24 semanas. Configura cuándo empieza la semana 1 (idealmente un lunes).'),
     el('input',{type:'date', value:val, oninput:e=>{val=e.target.value; btn.disabled=!val}}),
     (function(){
       const btn = el('button',{class:'btn-primary', onclick:()=>{
@@ -1137,10 +1198,18 @@ function viewHome(){
   // topbar
   wrap.appendChild(el('div',{class:'topbar'},[
     el('div',{},[
-      el('h1',{},`Hola, atleta`),
-      el('div',{class:'sub'},`Semana ${aw+1} · ${PLAN[aw].label}${PLAN[aw].isDeload?' · Deload':''}${PLAN[aw].isTaper?' · Tapering':''}`)
+      el('h1',{},`Hola, Miguel`),
+      el('div',{class:'sub'},`Reto 2026 · Semana ${aw+1} · ${PLAN[aw].label}${PLAN[aw].isDeload?' · Deload':''}${PLAN[aw].isTaper?' · Tapering':''}`)
     ]),
     el('button',{class:'icon-btn', title:'Ajustes', onclick:openSettings}, icon('settings'))
+  ]));
+
+  // mensaje motivacional del día
+  const quote = quoteOfTheDay();
+  wrap.appendChild(el('div',{class:'quote-card'},[
+    el('div',{class:'quote-mark'}, '“'),
+    el('div',{class:'quote-text'}, quote.text),
+    el('div',{class:'quote-author'}, quote.author)
   ]));
 
   // stats grid (estilo screenshot)
@@ -1388,6 +1457,16 @@ function viewSession(){
     el('div',{style:'width:40px'})
   ]));
 
+  // frase motivacional del día de la sesión
+  if(sd){
+    const q = quoteOfTheDay(sd);
+    wrap.appendChild(el('div',{class:'quote-card'},[
+      el('div',{class:'quote-mark'}, '“'),
+      el('div',{class:'quote-text'}, q.text),
+      el('div',{class:'quote-author'}, q.author)
+    ]));
+  }
+
   // hero info de la sesión
   const hero = el('div',{class:'card'},[
     el('div',{style:'display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px'},[
@@ -1468,6 +1547,14 @@ function viewDiet(){
     el('button',{class:'icon-btn', onclick:()=>{const d=new Date(date);d.setDate(d.getDate()-1);state.dietDate=isoOfDate(d);render()}}, icon('chevron_left')),
     el('div',{style:'flex:1;text-align:center;font-weight:700;font-size:14px;letter-spacing:-.01em'}, capitalize(fmtDate(date))),
     el('button',{class:'icon-btn', onclick:()=>{const d=new Date(date);d.setDate(d.getDate()+1);state.dietDate=isoOfDate(d);render()}}, icon('chevron_right'))
+  ]));
+
+  // frase motivacional del día visualizado
+  const q = quoteOfTheDay(date);
+  wrap.appendChild(el('div',{class:'quote-card'},[
+    el('div',{class:'quote-mark'}, '“'),
+    el('div',{class:'quote-text'}, q.text),
+    el('div',{class:'quote-author'}, q.author)
   ]));
 
   // disclaimer
