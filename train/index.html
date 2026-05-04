@@ -252,9 +252,15 @@
   }
   .welcome h1{font-size:30px;font-weight:800;letter-spacing:-.03em;margin:0 0 8px}
   .welcome p{color:var(--muted);margin:0 0 22px}
-  .welcome input[type=date]{
+  .welcome input[type=date],
+  .welcome input[type=email],
+  .welcome input[type=password]{
     width:100%;padding:16px;border-radius:16px;border:1px solid var(--line);
-    background:var(--card);color:var(--ink);font-size:16px;font-family:inherit;margin-bottom:14px
+    background:var(--card);color:var(--ink);font-size:16px;font-family:inherit;margin-bottom:10px
+  }
+  .welcome .login-error{
+    background:#fde7e7;color:var(--danger);padding:10px 14px;border-radius:12px;
+    font-size:13px;font-weight:600;margin-bottom:10px;text-align:left
   }
   .btn-primary{
     width:100%;padding:16px 22px;background:var(--primary);color:#fff;
@@ -1146,17 +1152,32 @@ async function initAuth(){
   });
 }
 
-async function signInMagicLink(email){
+async function signInPassword(email, password){
   if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
     alert('Email no válido.'); return;
   }
+  if(!password){ alert('Introduce tu contraseña.'); return; }
+  state.loginError = '';
   try{
-    const { error } = await sb.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: location.origin + '/train/' }
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error) throw error;
+    // onAuthStateChange se encarga de pull + render
+  }catch(e){
+    state.loginError = (e.message || 'No se pudo iniciar sesión.');
+    render();
+  }
+}
+
+async function resetPassword(email){
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    alert('Escribe primero tu email arriba y vuelve a pulsar "He olvidado mi contraseña".'); return;
+  }
+  try{
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: location.origin + '/train/'
     });
     if(error) throw error;
-    state.loginSent = true; render();
+    alert('Te he enviado un enlace para restablecer la contraseña al email '+email);
   }catch(e){
     alert('No se pudo enviar el enlace: '+e.message);
   }
@@ -1417,26 +1438,28 @@ function viewLogin(){
   wrap.append(
     el('div',{class:'logo'}, icon('directions_run','filled')),
     el('h1',{},'Reto 2026'),
-    el('p',{}, state.loginSent
-      ? 'Te he enviado un enlace mágico al email. Ábrelo en este mismo dispositivo para iniciar sesión.'
-      : 'Hola Miguel. Inicia sesión para que tu progreso se sincronice entre dispositivos.')
+    el('p',{},'Inicia sesión con tu cuenta de Runvato.')
   );
 
-  if(!state.loginSent){
-    const input = el('input',{type:'email',placeholder:'tu@email.com',value:state.loginEmail,
-      oninput:e=>{state.loginEmail=e.target.value}});
-    wrap.append(
-      input,
-      el('button',{class:'btn-primary', onclick:()=>signInMagicLink(state.loginEmail)},
-        ['Enviar enlace mágico ', icon('send')]),
-      el('button',{class:'btn-ghost', onclick:continueAsGuest},
-        'Continuar sin cuenta (solo este dispositivo)')
-    );
-  }else{
-    wrap.append(
-      el('button',{class:'btn-ghost', onclick:()=>{state.loginSent=false;render()}},'Cambiar de email')
-    );
+  const emailInput = el('input',{type:'email',placeholder:'tu@email.com',autocomplete:'email',value:state.loginEmail,
+    oninput:e=>{state.loginEmail=e.target.value}});
+  const passInput = el('input',{type:'password',placeholder:'Contraseña',autocomplete:'current-password',
+    onkeydown:e=>{ if(e.key==='Enter') signInPassword(state.loginEmail, passInput.value); }});
+
+  wrap.append(emailInput, passInput);
+
+  if(state.loginError){
+    wrap.append(el('div',{class:'login-error'}, state.loginError));
   }
+
+  wrap.append(
+    el('button',{class:'btn-primary', onclick:()=>signInPassword(state.loginEmail, passInput.value)},
+      ['Iniciar sesión ', icon('arrow_forward')]),
+    el('button',{class:'btn-ghost', onclick:()=>resetPassword(state.loginEmail)},
+      'He olvidado mi contraseña'),
+    el('button',{class:'btn-ghost', onclick:continueAsGuest},
+      'Continuar sin cuenta (solo este dispositivo)')
+  );
   return wrap;
 }
 
