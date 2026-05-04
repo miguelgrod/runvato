@@ -75,12 +75,19 @@
 
   /* stats grid */
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .stat{
     background:var(--card);border-radius:18px;padding:14px;box-shadow:var(--shadow)
   }
   .stat .label{color:var(--muted);font-size:12px;font-weight:500;margin-top:6px}
   .stat .value{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-top:2px}
   .stat .delta{font-size:12px;font-weight:700;color:var(--ok)}
+  .grid-4 .stat{padding:10px 8px;border-radius:16px;text-align:left}
+  .grid-4 .stat .badge-icon{width:30px;height:30px;border-radius:10px}
+  .grid-4 .stat .badge-icon .material-symbols-outlined{font-size:18px}
+  .grid-4 .stat .value{font-size:17px;margin-top:6px;line-height:1.1}
+  .grid-4 .stat .label{font-size:10px;margin-top:2px;line-height:1.2}
+  .grid-4 .stat .delta{font-size:10px}
   .badge-icon{
     width:36px;height:36px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;
     background:var(--primary-soft);color:var(--primary)
@@ -1212,16 +1219,13 @@ function viewHome(){
     el('div',{class:'quote-author'}, quote.author)
   ]));
 
-  // stats grid (estilo screenshot)
-  const grid = el('div',{class:'grid-2', style:'margin-bottom:14px'});
-  grid.appendChild(stat('directions_run', `${done}/${tot}`, 'Sesiones totales', `${pct}%`, 'badge-icon'));
-  grid.appendChild(stat('local_fire_department', `${wp.done}/${wp.total}`, 'Esta semana', null, 'badge-icon warn'));
+  // stats grid (4 columnas)
+  const grid = el('div',{class:'grid-4', style:'margin-bottom:14px'});
+  grid.appendChild(stat('directions_run', `${done}/${tot}`, 'Sesiones', `${pct}%`, 'badge-icon'));
+  grid.appendChild(stat('local_fire_department', `${wp.done}/${wp.total}`, 'Semana', null, 'badge-icon warn'));
+  grid.appendChild(stat('flag', `F${phase}`, PLAN[aw].label, `${pp.done}/${pp.total}`, 'badge-icon purple'));
+  grid.appendChild(stat('event_available', `${aw+1}/24`, 'Semanas', null, 'badge-icon ok'));
   wrap.appendChild(grid);
-
-  const grid2 = el('div',{class:'grid-2'});
-  grid2.appendChild(stat('flag', `Fase ${phase}`, PLAN[aw].label, `${pp.done}/${pp.total}`, 'badge-icon purple'));
-  grid2.appendChild(stat('event_available', `${aw+1}/24`, 'Semanas', null, 'badge-icon ok'));
-  wrap.appendChild(grid2);
 
   // próxima sesión hero
   wrap.appendChild(el('h2',{class:'h-section'},'Próxima sesión'));
