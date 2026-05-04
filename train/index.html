@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   /* ─── tokens ─────────────────────────────────────────────────── */
   :root{
@@ -222,6 +223,18 @@
   .quote-card .quote-author{
     margin-top:8px;font-size:12px;color:#cdd3ee;font-weight:500
   }
+
+  /* sync indicator */
+  .sync{
+    display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;
+    color:var(--muted);padding:4px 8px;border-radius:99px;background:var(--card)
+  }
+  .sync .dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex-shrink:0}
+  .sync.syncing .dot{background:var(--warn);animation:pulse 1s infinite}
+  .sync.error .dot{background:var(--danger)}
+  .sync.offline .dot{background:var(--muted)}
+  .sync.guest .dot{background:var(--muted)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
   /* welcome */
   .welcome{
@@ -975,9 +988,13 @@ function weekDietNote(w){
 }
 
 /* ════════════════════════════════════════════════════════════════
-   ESTADO Y PERSISTENCIA
+   ESTADO, PERSISTENCIA Y SYNC SUPABASE
    ════════════════════════════════════════════════════════════════ */
 const LS_KEY = 'plan24:v1';
+const SUPABASE_URL  = "https://criayuvoihnadarffnvk.supabase.co";
+const SUPABASE_ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNyaWF5dXZvaWhuYWRhcmZmbnZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMyNjAzOTIsImV4cCI6MjA4ODgzNjM5Mn0.5Qm4OEUftGMhrbhvB3rTF6Vsx86RPvp17mG75_ngpMQ";
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
 const state = {
   startDate: null,            // ISO yyyy-mm-dd, lunes de la semana 1
   done: {},                   // { "weekIdx-sessionIdx-itemIdx": true }
@@ -987,20 +1004,181 @@ const state = {
   weekIdx: 0,                 // semana visible
   sessionIdx: 0,              // sesión visible
   calMonth: null,             // {y, m} mes mostrado en el calendario
-  dietDate: null              // ISO yyyy-mm-dd para la vista de nutrición
+  dietDate: null,             // ISO yyyy-mm-dd para la vista de nutrición
+  // auth + sync
+  user: null,                 // {id, email} si hay sesión
+  guestMode: false,           // true si decidió usar sin cuenta
+  syncStatus: 'idle',         // idle | syncing | error | offline | guest
+  loginEmail: '',             // valor del input en pantalla login
+  loginSent: false,           // ya se envió el magic link
+  bootstrapping: true         // true mientras se decide login/welcome
 };
 
-function loadState(){
+function loadLocal(){
   try{
     const raw = localStorage.getItem(LS_KEY);
-    if(raw){ Object.assign(state, JSON.parse(raw)); }
+    if(raw){
+      const obj = JSON.parse(raw);
+      state.startDate = obj.startDate ?? null;
+      state.done = obj.done || {};
+      state.notes = obj.notes || {};
+      state.diet = obj.diet || {};
+      state.guestMode = !!obj.guestMode;
+    }
   }catch(e){}
-  if(!state.diet) state.diet = {};
-  if(!state.notes) state.notes = {};
+}
+function saveLocal(){
+  const {startDate, done, notes, diet, guestMode} = state;
+  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done, notes, diet, guestMode}));
 }
 function saveState(){
-  const {startDate, done, notes, diet} = state;
-  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done, notes, diet}));
+  saveLocal();
+  if(state.user) debouncedPush();
+}
+
+/* ── sync con Supabase ────────────────────────────────────────── */
+let pushTimer = null;
+function debouncedPush(){
+  clearTimeout(pushTimer);
+  state.syncStatus = 'syncing';
+  pushTimer = setTimeout(()=>{ pushToCloud(); }, 800);
+  updateSyncBadge();
+}
+
+async function pushToCloud(){
+  if(!state.user) return;
+  state.syncStatus = 'syncing'; updateSyncBadge();
+  try{
+    const payload = {
+      user_id: state.user.id,
+      state: {
+        startDate: state.startDate,
+        done: state.done,
+        notes: state.notes,
+        diet: state.diet
+      },
+      updated_at: new Date().toISOString()
+    };
+    const { error } = await sb.from('train_progress').upsert(payload, { onConflict: 'user_id' });
+    if(error) throw error;
+    state.syncStatus = 'idle';
+  }catch(e){
+    console.error('push error', e);
+    state.syncStatus = navigator.onLine ? 'error' : 'offline';
+  }
+  updateSyncBadge();
+}
+
+async function pullFromCloud(){
+  if(!state.user) return;
+  state.syncStatus = 'syncing'; updateSyncBadge();
+  try{
+    const { data, error } = await sb
+      .from('train_progress')
+      .select('state, updated_at')
+      .eq('user_id', state.user.id)
+      .maybeSingle();
+    if(error) throw error;
+
+    const cloud = data?.state;
+    const hasLocal = !!(state.startDate || Object.keys(state.done).length || Object.keys(state.notes).length || Object.keys(state.diet).length);
+
+    if(!cloud){
+      // primer login en este usuario; si hay datos locales, preguntar
+      if(hasLocal){
+        const upload = confirm('Hay progreso local en este dispositivo. ¿Subirlo a tu cuenta en la nube?\n\n• Aceptar: tu progreso local pasa a tu cuenta.\n• Cancelar: empezar vacío en la nube (los datos locales se descartan).');
+        if(upload){
+          await pushToCloud();
+        }else{
+          state.startDate=null; state.done={}; state.notes={}; state.diet={};
+          saveLocal();
+          await pushToCloud();
+        }
+      }else{
+        await pushToCloud(); // crea fila vacía
+      }
+    }else{
+      // adoptar el estado de la nube como canónico
+      state.startDate = cloud.startDate ?? null;
+      state.done = cloud.done || {};
+      state.notes = cloud.notes || {};
+      state.diet = cloud.diet || {};
+      saveLocal();
+      state.syncStatus = 'idle';
+    }
+  }catch(e){
+    console.error('pull error', e);
+    state.syncStatus = navigator.onLine ? 'error' : 'offline';
+  }
+  updateSyncBadge();
+}
+
+/* ── auth ─────────────────────────────────────────────────────── */
+async function initAuth(){
+  // por si venimos del magic link
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    state.user = { id: session.user.id, email: session.user.email };
+    state.guestMode = false;
+    await pullFromCloud();
+  }else if(state.guestMode){
+    state.syncStatus = 'guest';
+  }
+  state.bootstrapping = false;
+
+  sb.auth.onAuthStateChange(async (event, session)=>{
+    if(event==='SIGNED_IN' && session){
+      state.user = { id: session.user.id, email: session.user.email };
+      state.guestMode = false; saveLocal();
+      await pullFromCloud();
+      state.view = 'home';
+      render();
+    }else if(event==='SIGNED_OUT'){
+      state.user = null;
+      state.syncStatus = state.guestMode ? 'guest' : 'idle';
+      render();
+    }
+  });
+}
+
+async function signInMagicLink(email){
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    alert('Email no válido.'); return;
+  }
+  try{
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: location.origin + '/train/' }
+    });
+    if(error) throw error;
+    state.loginSent = true; render();
+  }catch(e){
+    alert('No se pudo enviar el enlace: '+e.message);
+  }
+}
+
+async function signOut(){
+  await pushToCloud(); // último push antes de cerrar sesión
+  await sb.auth.signOut();
+  // limpiar progreso local para no contaminar otra cuenta
+  state.startDate=null; state.done={}; state.notes={}; state.diet={};
+  state.guestMode=false;
+  saveLocal();
+}
+
+function continueAsGuest(){
+  state.guestMode = true;
+  state.syncStatus = 'guest';
+  saveLocal();
+  render();
+}
+
+function updateSyncBadge(){
+  const el = document.getElementById('sync-badge');
+  if(!el) return;
+  el.className = 'sync ' + state.syncStatus;
+  const labels = {idle:'Sincronizado', syncing:'Sincronizando…', error:'Error de sync', offline:'Sin conexión', guest:'Sin cuenta'};
+  el.querySelector('.sync-label').textContent = labels[state.syncStatus] || '';
 }
 
 /* ── anotaciones por ejercicio ────────────────────────────────── */
@@ -1206,6 +1384,8 @@ function typeIcon(t){
 function render(){
   const r = root();
   r.innerHTML = '';
+  if(state.bootstrapping){ r.appendChild(viewBootstrap()); return; }
+  if(!state.user && !state.guestMode){ r.appendChild(viewLogin()); return; }
   if(!state.startDate){ r.appendChild(viewWelcome()); return; }
   const app = el('div',{id:'app',class:'view'});
   if(state.view==='home') app.appendChild(viewHome());
@@ -1215,6 +1395,44 @@ function render(){
   else if(state.view==='history') app.appendChild(viewHistory());
   r.appendChild(app);
   r.appendChild(viewNav());
+}
+
+/* ─── bootstrap (carga inicial) ───────────────────────────────── */
+function viewBootstrap(){
+  return el('div',{class:'welcome'},[
+    el('div',{class:'logo'}, icon('directions_run','filled')),
+    el('h1',{},'Reto 2026'),
+    el('p',{},'Cargando tu progreso…')
+  ]);
+}
+
+/* ─── login ──────────────────────────────────────────────────── */
+function viewLogin(){
+  const wrap = el('div',{class:'welcome'});
+  wrap.append(
+    el('div',{class:'logo'}, icon('directions_run','filled')),
+    el('h1',{},'Reto 2026'),
+    el('p',{}, state.loginSent
+      ? 'Te he enviado un enlace mágico al email. Ábrelo en este mismo dispositivo para iniciar sesión.'
+      : 'Hola Miguel. Inicia sesión para que tu progreso se sincronice entre dispositivos.')
+  );
+
+  if(!state.loginSent){
+    const input = el('input',{type:'email',placeholder:'tu@email.com',value:state.loginEmail,
+      oninput:e=>{state.loginEmail=e.target.value}});
+    wrap.append(
+      input,
+      el('button',{class:'btn-primary', onclick:()=>signInMagicLink(state.loginEmail)},
+        ['Enviar enlace mágico ', icon('send')]),
+      el('button',{class:'btn-ghost', onclick:continueAsGuest},
+        'Continuar sin cuenta (solo este dispositivo)')
+    );
+  }else{
+    wrap.append(
+      el('button',{class:'btn-ghost', onclick:()=>{state.loginSent=false;render()}},'Cambiar de email')
+    );
+  }
+  return wrap;
 }
 
 /* ─── welcome ─────────────────────────────────────────────────── */
@@ -1260,7 +1478,11 @@ function viewHome(){
   wrap.appendChild(el('div',{class:'topbar'},[
     el('div',{},[
       el('h1',{},`Hola, Miguel`),
-      el('div',{class:'sub'},`Reto 2026 · Semana ${aw+1} · ${PLAN[aw].label}${PLAN[aw].isDeload?' · Deload':''}${PLAN[aw].isTaper?' · Tapering':''}`)
+      el('div',{class:'sub'},`Reto 2026 · Semana ${aw+1} · ${PLAN[aw].label}${PLAN[aw].isDeload?' · Deload':''}${PLAN[aw].isTaper?' · Tapering':''}`),
+      el('div',{id:'sync-badge', class:'sync '+state.syncStatus, style:'margin-top:6px'},[
+        el('span',{class:'dot'}),
+        el('span',{class:'sync-label'}, ({idle:'Sincronizado',syncing:'Sincronizando…',error:'Error de sync',offline:'Sin conexión',guest:'Sin cuenta'})[state.syncStatus]||'')
+      ])
     ]),
     el('button',{class:'icon-btn', title:'Ajustes', onclick:openSettings}, icon('settings'))
   ]));
@@ -1944,25 +2166,35 @@ function viewNav(){
 
 /* ─── settings ────────────────────────────────────────────────── */
 function openSettings(){
+  const sessionLine = state.user
+    ? `Sesión: ${state.user.email}`
+    : state.guestMode ? 'Modo invitado (sin cuenta)' : 'Sin sesión';
   const opts = [
+    sessionLine,
+    '',
     '1. Cambiar fecha de inicio',
-    '2. Exportar copia de seguridad (JSON)',
-    '3. Importar copia de seguridad',
-    '4. Borrar todo el progreso',
+    '2. Forzar sincronización ahora',
+    '3. Exportar copia de seguridad (JSON)',
+    '4. Importar copia de seguridad',
+    state.user ? '5. Cerrar sesión' : '5. Iniciar sesión',
+    '6. Borrar todo el progreso (este dispositivo)',
     '',
     'Escribe el número y pulsa OK:'
   ].join('\n');
-  const choice = prompt(opts, '1');
-  if(choice===null) return;
-  if(choice.trim()==='1'){
+  const choice = (prompt(opts, '1')||'').trim();
+  if(!choice) return;
+  if(choice==='1'){
     const v = prompt('Fecha de inicio del plan (YYYY-MM-DD):', state.startDate || '');
     if(v===null || !v.trim()) return;
     if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ alert('Formato no válido. Usa YYYY-MM-DD.'); return; }
     state.startDate = v; saveState(); render();
-  }else if(choice.trim()==='2'){
+  }else if(choice==='2'){
+    if(!state.user){ alert('Inicia sesión para sincronizar con la nube.'); return; }
+    pushToCloud().then(()=>alert('Sincronizado.'));
+  }else if(choice==='3'){
     const data = JSON.stringify({startDate:state.startDate, done:state.done, notes:state.notes, diet:state.diet}, null, 2);
     prompt('Copia este texto y guárdalo. Para restaurar usa "Importar".', data);
-  }else if(choice.trim()==='3'){
+  }else if(choice==='4'){
     const data = prompt('Pega aquí el JSON de la copia de seguridad:', '');
     if(!data) return;
     try{
@@ -1974,9 +2206,20 @@ function openSettings(){
       saveState(); render();
       alert('Copia restaurada con éxito.');
     }catch(e){ alert('JSON no válido.'); }
-  }else if(choice.trim()==='4'){
-    if(confirm('¿Borrar todo el progreso y reiniciar?')){
-      state.startDate=null; state.done={}; state.notes={}; state.diet={}; state.view='home'; saveState(); render();
+  }else if(choice==='5'){
+    if(state.user){
+      if(confirm('¿Cerrar sesión? Tu progreso ya está guardado en la nube. Se borrará el caché local de este dispositivo.')){
+        signOut().then(render);
+      }
+    }else{
+      state.guestMode=false; state.loginSent=false; saveLocal(); render();
+    }
+  }else if(choice==='6'){
+    if(confirm('¿Borrar todo el progreso de este dispositivo?\n\nSi tienes cuenta, los datos siguen en la nube y se restaurarán al iniciar sesión.')){
+      state.startDate=null; state.done={}; state.notes={}; state.diet={}; state.view='home';
+      saveLocal();
+      if(state.user) pushToCloud(); // reflejar el borrado en la nube
+      render();
     }
   }
 }
@@ -2026,8 +2269,13 @@ function onSessionComplete(w, s){
 function capitalize(s){ return s ? s[0].toUpperCase()+s.slice(1) : s; }
 
 /* ─── boot ────────────────────────────────────────────────────── */
-loadState();
-render();
+loadLocal();
+render(); // pinta el estado bootstrapping
+initAuth().then(render);
+
+// reaccionar a cambios de conectividad
+window.addEventListener('online', ()=>{ if(state.user){ pushToCloud(); } });
+window.addEventListener('offline', ()=>{ state.syncStatus='offline'; updateSyncBadge(); });
 </script>
 </body>
 </html>
