@@ -917,9 +917,7 @@ function quoteOfTheDay(date){
 
 /* ════════════════════════════════════════════════════════════════
    PLAN DE ALIMENTACIÓN
-   Diseñado por nutricionista colegiada (Nº AS00062).
    ════════════════════════════════════════════════════════════════ */
-const DIET_DISCLAIMER = 'El menú está elaborado por una nutricionista colegiada (Nº AS00062) y adaptado a los días de entrenamiento. Sigue siempre las indicaciones de tu profesional de referencia.';
 
 // Lunch rotación 7 días, indexado por Date.getDay() (0=Dom, 1=Lun…)
 const LUNCH = [
@@ -1892,11 +1890,6 @@ function viewDiet(){
     el('div',{class:'quote-mark'}, '“'),
     el('div',{class:'quote-text'}, q.text),
     el('div',{class:'quote-author'}, q.author)
-  ]));
-
-  // disclaimer
-  wrap.appendChild(el('div',{class:'note'},[
-    el('strong',{},'Nutricionista colegiada (Nº AS00062). '), DIET_DISCLAIMER.split('. ').slice(1).join('. ')
   ]));
 
   // tipo de día y nota
