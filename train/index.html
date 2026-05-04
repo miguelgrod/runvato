@@ -914,7 +914,11 @@ function sessionDate(weekIdx, sessionIdx){
   return d;
 }
 function isoOfDate(d){
-  return d.toISOString().slice(0,10);
+  // formatear en zona local (toISOString usa UTC y desplaza el día en TZ +N)
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
 function sameDay(a,b){
   return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
