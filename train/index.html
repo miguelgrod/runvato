@@ -1512,7 +1512,7 @@ function viewHome(){
         el('span',{class:'sync-label'}, ({idle:'Sincronizado',syncing:'Sincronizando…',error:'Error de sync',offline:'Sin conexión',guest:'Sin cuenta'})[state.syncStatus]||'')
       ])
     ]),
-    el('button',{class:'icon-btn', title:'Ajustes', onclick:openSettings}, icon('settings'))
+    el('div',{style:'width:40px'})
   ]));
 
   // mensaje motivacional del día
@@ -2085,6 +2085,7 @@ function viewHistory(){
       el('div',{style:'margin-top:8px'}, 'Aún no hay actividad registrada.'),
       el('div',{class:'small', style:'margin-top:4px'}, 'Marca ejercicios o comidas y aparecerán aquí.')
     ]));
+    wrap.appendChild(el('button',{style:'width:100%;margin-top:24px;padding:12px 16px;background:#ef4444;color:white;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:background 0.2s', onmouseover:e=>e.target.style.background='#dc2626', onmouseout:e=>e.target.style.background='#ef4444', onclick:()=>signOut().then(render)}, 'Cerrar sesión'));
     return wrap;
   }
 
@@ -2106,6 +2107,8 @@ function viewHistory(){
     }
     wrap.appendChild(historyRow(e));
   });
+
+  wrap.appendChild(el('button',{style:'width:calc(100% - 36px);margin:24px 18px 0;padding:12px 16px;background:#ef4444;color:white;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;transition:background 0.2s', onmouseover:e=>e.target.style.background='#dc2626', onmouseout:e=>e.target.style.background='#ef4444', onclick:()=>signOut().then(render)}, 'Cerrar sesión'));
 
   return wrap;
 }
