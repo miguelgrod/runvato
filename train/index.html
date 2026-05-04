@@ -264,7 +264,28 @@
     transform:rotate(45deg) translate(-1px,-1px)
   }
   .ex .text{flex:1;font-size:14px;line-height:1.45;color:var(--ink-2)}
-  .ex.done .text{text-decoration:line-through;color:var(--muted)}
+  .ex.done .text > div:first-child{text-decoration:line-through;color:var(--muted)}
+  .ex-note{
+    margin-top:6px;padding:6px 10px;background:var(--primary-soft);color:var(--primary);
+    border-radius:8px;font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;line-height:1.3
+  }
+  .ex-note .material-symbols-outlined{font-size:14px}
+  .ex-history-toggle{
+    margin-top:6px;font-size:12px;color:var(--muted);font-weight:600;
+    display:inline-flex;align-items:center;gap:4px;cursor:pointer;padding:4px 0
+  }
+  .ex-history-toggle .material-symbols-outlined{font-size:14px}
+  .ex-history{display:none;margin-top:4px;padding:8px 10px;background:var(--card);border-radius:8px}
+  .ex-history.open{display:block}
+  .ex-history-item{font-size:12px;color:var(--ink-2);display:flex;gap:8px;padding:3px 0}
+  .ex-history-date{color:var(--muted);font-weight:600;flex-shrink:0;text-transform:capitalize}
+  .ex-history-note{color:var(--ink-2)}
+  .ex-actions{
+    flex-shrink:0;width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    color:var(--muted);background:transparent;cursor:pointer
+  }
+  .ex-actions:hover{background:var(--card)}
+  .ex-actions .material-symbols-outlined{font-size:18px}
 
   /* meta line */
   .meta-line{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
@@ -960,6 +981,7 @@ const LS_KEY = 'plan24:v1';
 const state = {
   startDate: null,            // ISO yyyy-mm-dd, lunes de la semana 1
   done: {},                   // { "weekIdx-sessionIdx-itemIdx": true }
+  notes: {},                  // { "weekIdx-sessionIdx-itemIdx": "60 kg, ok" } anotaciones por ejercicio
   diet: {},                   // { "yyyy-mm-dd": {morning, lunch, afternoon, dinner} }
   view: 'home',               // home | week | session | diet | history
   weekIdx: 0,                 // semana visible
@@ -974,10 +996,42 @@ function loadState(){
     if(raw){ Object.assign(state, JSON.parse(raw)); }
   }catch(e){}
   if(!state.diet) state.diet = {};
+  if(!state.notes) state.notes = {};
 }
 function saveState(){
-  const {startDate, done, diet} = state;
-  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done, diet}));
+  const {startDate, done, notes, diet} = state;
+  localStorage.setItem(LS_KEY, JSON.stringify({startDate, done, notes, diet}));
+}
+
+/* ── anotaciones por ejercicio ────────────────────────────────── */
+function exKey(w,s,i){ return `${w}-${s}-${i}`; }
+function getNote(w,s,i){ return state.notes[exKey(w,s,i)] || ''; }
+function setNote(w,s,i,text){
+  const k = exKey(w,s,i);
+  if(text && text.trim()) state.notes[k] = text.trim();
+  else delete state.notes[k];
+  saveState();
+}
+// Histórico: busca la misma cadena de ejercicio en sesiones pasadas con anotación
+function exerciseHistory(w, s, i){
+  const text = PLAN[w].sessions[s].items[i];
+  const out = [];
+  for(let pw=0; pw<=w; pw++){
+    for(let ps=0; ps<PLAN[pw].sessions.length; ps++){
+      if(pw===w && ps===s) continue; // saltar el actual
+      const items = PLAN[pw].sessions[ps].items;
+      for(let pi=0; pi<items.length; pi++){
+        if(items[pi]===text){
+          const note = getNote(pw,ps,pi);
+          if(note){
+            const sd = sessionDate(pw,ps);
+            out.push({w:pw, s:ps, i:pi, note, date:sd});
+          }
+        }
+      }
+    }
+  }
+  return out.sort((a,b)=>(b.date||0)-(a.date||0));
 }
 
 /* ── log de comidas por día ────────────────────────────────────── */
@@ -1503,12 +1557,18 @@ function viewSession(){
     ]));
   }
 
-  // checklist
+  // checklist + anotaciones + histórico de ejercicio
   const list = el('div',{class:'card'});
   list.appendChild(el('div',{class:'h-section', style:'margin-top:0'}, 'Checklist'));
   ses.items.forEach((txt, i)=>{
     const done = isItemDone(w,s,i);
-    list.appendChild(el('div',{class:'ex'+(done?' done':''), onclick:()=>{
+    const note = getNote(w,s,i);
+    const history = exerciseHistory(w,s,i);
+
+    // fila principal: check + texto
+    const row = el('div',{class:'ex'+(done?' done':''), onclick:e=>{
+      // si se hace click en un control interno (botón anotar, etc.) ignorar
+      if(e.target.closest('.ex-actions')) return;
       const wasComplete = sessionProgress(w,s).complete;
       toggleItem(w,s,i);
       const nowComplete = sessionProgress(w,s).complete;
@@ -1516,8 +1576,30 @@ function viewSession(){
       if(!wasComplete && nowComplete) onSessionComplete(w,s);
     }},[
       el('div',{class:'check'}),
-      el('div',{class:'text'}, txt)
-    ]));
+      el('div',{class:'text', style:'flex:1'},[
+        el('div',{}, txt),
+        note ? el('div',{class:'ex-note'},[icon('edit_note'), ' ', note]) : null,
+        history.length>0 ? el('div',{class:'ex-history-toggle', onclick:e=>{
+          e.stopPropagation();
+          const next = e.currentTarget.nextElementSibling;
+          if(next) next.classList.toggle('open');
+        }},[icon('history'), ` Anteriores: ${history.length}`]) : null,
+        history.length>0 ? el('div',{class:'ex-history'},
+          history.map(h=>el('div',{class:'ex-history-item'},[
+            el('span',{class:'ex-history-date'}, h.date?capitalize(h.date.toLocaleDateString('es-ES',{day:'numeric',month:'short'})):`Sem ${h.w+1}`),
+            el('span',{class:'ex-history-note'}, h.note)
+          ]))
+        ) : null
+      ]),
+      el('div',{class:'ex-actions', onclick:e=>{
+        e.stopPropagation();
+        const v = prompt('Anota peso, repeticiones, sensaciones…\n\n'+txt, note);
+        if(v===null) return;
+        setNote(w,s,i,v);
+        render();
+      }}, icon(note?'edit':'edit_note'))
+    ]);
+    list.appendChild(row);
   });
   wrap.appendChild(list);
 
@@ -1862,18 +1944,46 @@ function viewNav(){
 
 /* ─── settings ────────────────────────────────────────────────── */
 function openSettings(){
-  const cur = state.startDate || '';
-  const v = prompt('Fecha de inicio del plan (YYYY-MM-DD).\nDeja vacío y pulsa OK para borrar todo el progreso.', cur);
-  if(v===null) return;
-  if(v.trim()===''){
+  const opts = [
+    '1. Cambiar fecha de inicio',
+    '2. Exportar copia de seguridad (JSON)',
+    '3. Importar copia de seguridad',
+    '4. Borrar todo el progreso',
+    '',
+    'Escribe el número y pulsa OK:'
+  ].join('\n');
+  const choice = prompt(opts, '1');
+  if(choice===null) return;
+  if(choice.trim()==='1'){
+    const v = prompt('Fecha de inicio del plan (YYYY-MM-DD):', state.startDate || '');
+    if(v===null || !v.trim()) return;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ alert('Formato no válido. Usa YYYY-MM-DD.'); return; }
+    state.startDate = v; saveState(); render();
+  }else if(choice.trim()==='2'){
+    const data = JSON.stringify({startDate:state.startDate, done:state.done, notes:state.notes, diet:state.diet}, null, 2);
+    prompt('Copia este texto y guárdalo. Para restaurar usa "Importar".', data);
+  }else if(choice.trim()==='3'){
+    const data = prompt('Pega aquí el JSON de la copia de seguridad:', '');
+    if(!data) return;
+    try{
+      const obj = JSON.parse(data);
+      if(obj.startDate) state.startDate = obj.startDate;
+      if(obj.done) state.done = obj.done;
+      if(obj.notes) state.notes = obj.notes;
+      if(obj.diet) state.diet = obj.diet;
+      saveState(); render();
+      alert('Copia restaurada con éxito.');
+    }catch(e){ alert('JSON no válido.'); }
+  }else if(choice.trim()==='4'){
     if(confirm('¿Borrar todo el progreso y reiniciar?')){
-      state.startDate=null; state.done={}; state.view='home'; saveState(); render();
+      state.startDate=null; state.done={}; state.notes={}; state.diet={}; state.view='home'; saveState(); render();
     }
-    return;
   }
-  if(!/^\d{4}-\d{2}-\d{2}$/.test(v)){ alert('Formato no válido. Usa YYYY-MM-DD.'); return; }
-  state.startDate = v; saveState(); render();
 }
+
+/* persistencia defensiva: guardar si la pestaña pasa a segundo plano */
+window.addEventListener('visibilitychange', ()=>{ if(document.hidden) saveState(); });
+window.addEventListener('beforeunload', saveState);
 
 /* ─── navegación ──────────────────────────────────────────────── */
 function goSession(w, s){
