@@ -967,6 +967,7 @@ const state = {
   syncStatus: 'idle',         // idle | syncing | error | offline | guest
   loginEmail: '',             // valor del input en pantalla login
   loginSent: false,           // ya se envió el magic link
+  authMode: 'signin',         // 'signin' | 'signup'
   bootstrapping: true         // true mientras se decide login/welcome
 };
 
@@ -1109,6 +1110,34 @@ async function signInPassword(email, password){
     // onAuthStateChange se encarga de pull + render
   }catch(e){
     state.loginError = (e.message || 'No se pudo iniciar sesión.');
+    render();
+  }
+}
+
+async function signUpPassword(email, password){
+  if(!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+    alert('Email no válido.'); return;
+  }
+  if(!password || password.length < 6){
+    alert('La contraseña debe tener al menos 6 caracteres.'); return;
+  }
+  state.loginError = '';
+  try{
+    const { data, error } = await sb.auth.signUp({
+      email, password,
+      options:{ emailRedirectTo: location.origin + '/train/' }
+    });
+    if(error) throw error;
+    if(data.session){
+      // alta + sesión inmediata; onAuthStateChange continúa el flujo
+      return;
+    }
+    // requiere confirmación por email
+    alert('Cuenta creada. Te he enviado un email a '+email+' para confirmarla. Después podrás iniciar sesión.');
+    state.authMode = 'signin';
+    render();
+  }catch(e){
+    state.loginError = (e.message || 'No se pudo crear la cuenta.');
     render();
   }
 }
@@ -1385,17 +1414,27 @@ function viewBootstrap(){
 
 /* ─── login ──────────────────────────────────────────────────── */
 function viewLogin(){
+  const isSignup = state.authMode === 'signup';
   const wrap = el('div',{class:'welcome'});
   wrap.append(
     el('div',{class:'logo'}, icon('directions_run','filled')),
     el('h1',{},'Reto 2026'),
-    el('p',{},'Inicia sesión con tu cuenta de Runvato.')
+    el('p',{}, isSignup
+      ? 'Crea tu cuenta de Runvato para guardar tu progreso.'
+      : 'Inicia sesión con tu cuenta de Runvato.')
   );
 
   const emailInput = el('input',{type:'email',placeholder:'tu@email.com',autocomplete:'email',value:state.loginEmail,
     oninput:e=>{state.loginEmail=e.target.value}});
-  const passInput = el('input',{type:'password',placeholder:'Contraseña',autocomplete:'current-password',
-    onkeydown:e=>{ if(e.key==='Enter') signInPassword(state.loginEmail, passInput.value); }});
+  const passInput = el('input',{
+    type:'password',
+    placeholder: isSignup ? 'Contraseña (mín. 6 caracteres)' : 'Contraseña',
+    autocomplete: isSignup ? 'new-password' : 'current-password',
+    onkeydown:e=>{ if(e.key==='Enter'){
+      if(isSignup) signUpPassword(state.loginEmail, passInput.value);
+      else signInPassword(state.loginEmail, passInput.value);
+    }}
+  });
 
   wrap.append(emailInput, passInput);
 
@@ -1403,14 +1442,27 @@ function viewLogin(){
     wrap.append(el('div',{class:'login-error'}, state.loginError));
   }
 
-  wrap.append(
-    el('button',{class:'btn-primary', onclick:()=>signInPassword(state.loginEmail, passInput.value)},
-      ['Iniciar sesión ', icon('arrow_forward')]),
-    el('button',{class:'btn-ghost', onclick:()=>resetPassword(state.loginEmail)},
-      'He olvidado mi contraseña'),
-    el('button',{class:'btn-ghost', onclick:continueAsGuest},
-      'Continuar sin cuenta (solo este dispositivo)')
-  );
+  if(isSignup){
+    wrap.append(
+      el('button',{class:'btn-primary', onclick:()=>signUpPassword(state.loginEmail, passInput.value)},
+        ['Crear cuenta ', icon('arrow_forward')]),
+      el('button',{class:'btn-ghost', onclick:()=>{ state.authMode='signin'; state.loginError=''; render(); }},
+        '¿Ya tienes cuenta? Inicia sesión'),
+      el('button',{class:'btn-ghost', onclick:continueAsGuest},
+        'Continuar sin cuenta (solo este dispositivo)')
+    );
+  } else {
+    wrap.append(
+      el('button',{class:'btn-primary', onclick:()=>signInPassword(state.loginEmail, passInput.value)},
+        ['Iniciar sesión ', icon('arrow_forward')]),
+      el('button',{class:'btn-ghost', onclick:()=>{ state.authMode='signup'; state.loginError=''; render(); }},
+        'Crear una cuenta nueva'),
+      el('button',{class:'btn-ghost', onclick:()=>resetPassword(state.loginEmail)},
+        'He olvidado mi contraseña'),
+      el('button',{class:'btn-ghost', onclick:continueAsGuest},
+        'Continuar sin cuenta (solo este dispositivo)')
+    );
+  }
   return wrap;
 }
 
