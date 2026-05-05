@@ -294,6 +294,14 @@
   .ex-actions:hover{background:var(--card)}
   .ex-actions .material-symbols-outlined{font-size:18px}
 
+  /* indicación dentro del checklist (no es un check) */
+  .ex-info{
+    display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--primary-soft);
+    border-left:3px solid var(--primary);border-radius:10px;margin-bottom:8px;
+    font-size:13px;color:var(--ink-2);line-height:1.45
+  }
+  .ex-info .material-symbols-outlined{font-size:18px;color:var(--primary);flex-shrink:0;margin-top:1px}
+
   /* meta line */
   .meta-line{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:8px}
   .meta-line .m{display:inline-flex;align-items:center;gap:4px}
@@ -394,7 +402,7 @@ const PLAN = [
       '5 min calentamiento caminando',
       '4 min marcha rápida / 1 min trote suave × 5 series',
       '5 min vuelta a la calma',
-      'Ritmo trote: ~8:00–9:00 min/km (muy cómodo, zona 2)'
+      {indication:'Ritmo trote: ~8:00–9:00 min/km (muy cómodo, zona 2)'}
     ]},
     {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:45,title:'Circuito básico',items:[
       'Sentadilla con peso corporal 3×12',
@@ -416,7 +424,7 @@ const PLAN = [
       '5 min calentamiento marchando',
       '3 min trote / 2 min marcha × 6 series',
       '5 min enfriamiento caminando',
-      'Mismo ritmo que semana 1, no aceleres'
+      {indication:'Mismo ritmo que semana 1, no aceleres'}
     ]},
     {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Circuito + tirón',items:[
       'Sentadilla goblet con kettlebell o mancuerna 3×12',
@@ -437,7 +445,7 @@ const PLAN = [
     {day:'Tue',type:'Cardio',location:'Aire libre',duration:40,title:'4/1 progresivo',items:[
       '5 min marcha de calentamiento',
       '4 min trote / 1 min marcha × 7 series',
-      'Ritmo trote: ~7:30 min/km',
+      {indication:'Ritmo trote: ~7:30 min/km'},
       '5 min enfriamiento'
     ]},
     {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:55,title:'Circuito con carga',items:[
@@ -458,7 +466,7 @@ const PLAN = [
     {day:'Tue',type:'Cardio',location:'Aire libre',duration:30,title:'Cardio suave',note:'Semana de deload — el cuerpo asimila el trabajo de las 3 anteriores. No fuerces.',items:[
       '30 min marcha rápida o trote muy suave',
       'Si corres: 3 min trote / 2 min marcha × 4 series',
-      'Ritmo el más suave posible'
+      {indication:'Ritmo el más suave posible'}
     ]},
     {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:35,title:'Fuerza ligera (deload)',items:[
       'Mismos ejercicios semanas anteriores pero solo 2 series',
@@ -521,7 +529,7 @@ const PLAN = [
     {day:'Tue',type:'Cardio',location:'Aire libre',duration:50,title:'20 min continuo',items:[
       '5 min marcha calentamiento',
       '20 min trote continuo sin parar',
-      'Ritmo: 7:00–7:30 min/km',
+      {indication:'Ritmo: 7:00–7:30 min/km'},
       '10 min marcha recuperación',
       '10 min trote opcional si te encuentras bien'
     ]},
@@ -582,7 +590,7 @@ const PLAN = [
     {day:'Tue',type:'Cardio',location:'Aire libre',duration:50,title:'4 km',items:[
       '10 min calentamiento',
       '4 km a 6:30–7:00 min/km sin parar',
-      'Si te cansas: baja el ritmo, no pares',
+      {indication:'Si te cansas: baja el ritmo, no pares'},
       '10 min vuelta a la calma + estiramientos'
     ]},
     {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:45,title:'Fuerza + core específico',items:[
@@ -663,7 +671,7 @@ const PLAN = [
   {phase:4, label:'Puente Camino', sessions:[
     {day:'Tue',type:'Marcha',location:'Aire libre',duration:75,title:'Marcha con mochila — 75 min',items:[
       'Mochila 6 kg',
-      'Ritmo sostenido en todo el recorrido',
+      {indication:'Ritmo sostenido en todo el recorrido'},
       'Incluir tramos de subida intencionalmente',
       'Practicar paso largo, no de paseo'
     ]},
@@ -698,7 +706,7 @@ const PLAN = [
   {phase:4, label:'Puente Camino', isDeload:true, sessions:[
     {day:'Tue',type:'Marcha',location:'Aire libre',duration:45,title:'Marcha suave — 45 min',note:'Deload antes del bloque específico Camino.',items:[
       'Sin mochila o con 2–3 kg máximo',
-      'Ritmo de paseo, disfrutar'
+      {indication:'Ritmo de paseo, disfrutar'}
     ]},
     {day:'Thu',type:'Movilidad',location:'Gimnasio',duration:40,title:'Movilidad completa',items:[
       'Estiramientos cadena posterior 20 min',
@@ -716,7 +724,7 @@ const PLAN = [
   {phase:5, label:'Específico Camino', sessions:[
     {day:'Tue',type:'Marcha',location:'Exterior',duration:70,title:'Marcha con mochila — 70 min',items:[
       'Mochila 7 kg',
-      'Ritmo sostenido sin prisa'
+      {indication:'Ritmo sostenido sin prisa'}
     ]},
     {day:'Thu',type:'Fuerza',location:'Gimnasio',duration:50,title:'Pierna + core',items:[
       'Sentadilla 3×10',
@@ -733,7 +741,7 @@ const PLAN = [
     ]},
     {day:'Sun',type:'Marcha',location:'Exterior',duration:240,title:'Etapa 2 — 15 km (piernas cargadas)',note:'El entrenamiento más específico del plan: día consecutivo.',items:[
       'Salir con las piernas del día anterior cargadas',
-      'Bajar el ritmo es normal y correcto',
+      {indication:'Bajar el ritmo es normal y correcto'},
       'Anotar cómo responde el cuerpo al día consecutivo'
     ]}
   ]},
@@ -1248,10 +1256,16 @@ function toggleItem(w,s,i){
   if(state.done[k]) delete state.done[k]; else state.done[k] = true;
   saveState();
 }
+function isCheckable(item){ return typeof item === 'string'; }
 function sessionProgress(w,s){
   const items = PLAN[w].sessions[s].items;
-  const done = items.reduce((n,_,i)=>n+(isItemDone(w,s,i)?1:0),0);
-  return {done, total:items.length, complete: done===items.length};
+  let total = 0, done = 0;
+  items.forEach((it,i)=>{
+    if(!isCheckable(it)) return;
+    total++;
+    if(isItemDone(w,s,i)) done++;
+  });
+  return {done, total, complete: total>0 && done===total};
 }
 function weekProgress(w){
   const total = PLAN[w].sessions.length;
@@ -1730,7 +1744,15 @@ function viewSession(){
   // checklist + anotaciones + histórico de ejercicio
   const list = el('div',{class:'card'});
   list.appendChild(el('div',{class:'h-section', style:'margin-top:0'}, 'Checklist'));
-  ses.items.forEach((txt, i)=>{
+  ses.items.forEach((item, i)=>{
+    if(!isCheckable(item)){
+      list.appendChild(el('div',{class:'ex-info'},[
+        icon('info'),
+        el('div',{}, item.indication || item.ind || item.note || '')
+      ]));
+      return;
+    }
+    const txt = item;
     const done = isItemDone(w,s,i);
     const note = getNote(w,s,i);
     const history = exerciseHistory(w,s,i);
