@@ -1447,9 +1447,7 @@ function viewLogin(){
       el('button',{class:'btn-primary', onclick:()=>signUpPassword(state.loginEmail, passInput.value)},
         ['Crear cuenta ', icon('arrow_forward')]),
       el('button',{class:'btn-ghost', onclick:()=>{ state.authMode='signin'; state.loginError=''; render(); }},
-        '¿Ya tienes cuenta? Inicia sesión'),
-      el('button',{class:'btn-ghost', onclick:continueAsGuest},
-        'Continuar sin cuenta (solo este dispositivo)')
+        '¿Ya tienes cuenta? Inicia sesión')
     );
   } else {
     wrap.append(
@@ -1458,9 +1456,7 @@ function viewLogin(){
       el('button',{class:'btn-ghost', onclick:()=>{ state.authMode='signup'; state.loginError=''; render(); }},
         'Crear una cuenta nueva'),
       el('button',{class:'btn-ghost', onclick:()=>resetPassword(state.loginEmail)},
-        'He olvidado mi contraseña'),
-      el('button',{class:'btn-ghost', onclick:continueAsGuest},
-        'Continuar sin cuenta (solo este dispositivo)')
+        'He olvidado mi contraseña')
     );
   }
   return wrap;
